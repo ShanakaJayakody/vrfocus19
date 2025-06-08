@@ -54,7 +54,7 @@
              padding: 0.25rem 0.75rem; 
              border-radius: 0.25rem; 
         }
-        .footer-bar button {
+        .footer-bar button, .font-size-button {
             background-color: transparent;
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.5); 
@@ -63,7 +63,12 @@
             border-radius: 0.375rem;
              transition: background-color 0.2s ease, border-color 0.2s ease;
         }
-        .footer-bar button:hover:not(:disabled) {
+        .font-size-button {
+            padding: 0.2rem 0.6rem;
+            font-weight: bold;
+            line-height: 1.25;
+        }
+        .footer-bar button:hover:not(:disabled), .font-size-button:hover:not(:disabled) {
             background-color: rgba(255, 255, 255, 0.15); 
             border-color: white;
         }
@@ -108,23 +113,18 @@
             padding: 1rem; 
             gap: 1rem; 
         }
-        .passage-column {
-            flex: 0 0 60%; 
+        .passage-column, .question-column {
+            flex: 0 0 50%;
             overflow-y: auto; 
             padding: 1rem;
             border: 1px solid #e5e7eb;
             border-radius: 0.375rem;
             background-color: #ffffff; 
             height: 100%; 
+            transition: font-size 0.2s ease;
         }
         .question-column {
-             flex: 0 0 40%; 
-             overflow-y: auto; 
-             padding: 1rem;
-             border: 1px solid #e5e7eb;
-             border-radius: 0.375rem;
-             background-color: #ffffff; 
-             height: 100%; 
+             flex: 0 0 50%; 
              position: relative; 
         }
 
@@ -178,13 +178,14 @@
             transition: background-color 0.2s ease, border-color 0.2s ease;
             background-color: #ffffff; 
             color: #111827; 
-            font-size: 1rem;  
         }
         .option-label:hover:not(.selected-answer) { 
             background-color: #f3f4f6; 
             border-color: #a5b4fc; 
         }
         input[type="radio"] { display: none; }
+        .resizable-text { font-size: 1rem; }
+
 
        .correct-answer-li { background-color: #dcfce7; border-left: 4px solid #22c55e; }
        .incorrect-answer-li { background-color: #fee2e2; border-left: 4px solid #ef4444; }
@@ -290,7 +291,6 @@
              padding: 0.5rem 0.75rem; 
              margin-top: 0.75rem; 
              border-radius: 0.375rem; 
-             font-size: 0.875rem; 
              color: #111827; 
          }
 
@@ -338,7 +338,7 @@
             .header-bar, .footer-bar {
                 padding: 0.5rem 1rem;
             }
-            .header-bar span, .footer-bar button { 
+            .header-bar span, .footer-bar button, .font-size-button { 
                 font-size: 0.8rem;
             }
             button, .button {
@@ -351,12 +351,11 @@
             .grid-cols-5 { grid-template-columns: repeat(4, minmax(0, 1fr)); } 
             #review-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } 
             .review-grid-button { font-size: 0.8rem; }
-            /* #results-grid-container { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); } REMOVED to keep 8 columns */
         }
         @media (max-width: 480px) {
              .grid-cols-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } 
              #review-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } 
-             .header-bar span, .footer-bar button { font-size: 0.75rem; }
+             .header-bar span, .footer-bar button, .font-size-button { font-size: 0.75rem; }
              button, .button {
                  padding: 0.3rem 0.6rem;
              }
@@ -364,17 +363,15 @@
                  padding: 0.25rem 0.5rem;
                  font-size: 0.7rem;
               }
-             .option-label { padding: 0.5rem 0.75rem; font-size: 0.875rem;} 
+             .option-label { padding: 0.5rem 0.75rem;} 
              .review-grid-button { font-size: 0.75rem; }
-             /* #results-grid-container { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); } REMOVED to keep 8 columns */
          }
-         /* UPDATED: Media queries for result box text on smaller screens with 8 columns */
         @media (max-width: 600px) { 
             #results-grid-container {
-                gap: 0.25rem; /* Further reduce gap for small screens */
+                gap: 0.25rem;
             }
             .result-box .time-spent {
-                font-size: 0.875rem; /* text-sm */
+                font-size: 0.875rem;
             }
             .result-box .question-num-label {
                 font-size: 0.6rem; 
@@ -382,17 +379,15 @@
         }
         @media (max-width: 400px) { 
             .result-box .time-spent {
-                font-size: 0.75rem; /* text-xs */
+                font-size: 0.75rem;
             }
             .result-box .question-num-label {
                 font-size: 0.5rem; 
             }
               .result-box {
-                padding: 0.1rem; /* Minimal padding for very small squares */
+                padding: 0.1rem;
               }
         }
-
-
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -433,6 +428,10 @@
             <div class="header-bar">
                 <span id="exam-title" class="font-semibold">Verbal Reasoning</span>
                 <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <button id="font-decrease-button" class="font-size-button">A-</button>
+                        <button id="font-increase-button" class="font-size-button">A+</button>
+                    </div>
                     <div id="timer" class="text-base px-3 py-1 rounded-md">10:00</div>
                     <span class="text-sm">Question <span id="question-number-info">1</span> of 16</span>
                     <button id="flag-button" class="text-sm font-medium border border-white rounded px-2 py-1 transition-colors duration-150">
@@ -442,15 +441,15 @@
             </div>
 
             <div class="main-content-area">
-                <div class="passage-column">
+                <div class="passage-column resizable-text">
                     <h3 class="text-lg font-semibold mb-2 sticky top-0 bg-white text-gray-900 pb-1">Passage <span id="passage-number">1</span></h3>
                     <div id="passage-text" class="text-base text-gray-900 leading-relaxed whitespace-pre-wrap">
                         </div>
                 </div>
 
-                <div class="question-column">
+                <div class="question-column resizable-text">
                      <h4 class="text-md font-semibold mb-3 sticky top-0 bg-white text-gray-900 pb-1">Question <span id="question-number">1</span></h4>
-                    <p id="question-text" class="mb-4 text-gray-900 text-base">
+                    <p id="question-text" class="mb-4 text-gray-900">
                         </p>
                     <div id="options-container" class="space-y-2">
                         </div>
@@ -482,7 +481,7 @@
             </div>
         </div>
 
-        <div id="results-screen" class="hidden p-6 md:p-8 flex flex-col h-full">
+        <div id="results-screen" class="hidden p-6 md:p-8 flex flex-col h-full overflow-y-auto">
              <div class="text-center mb-6 flex-shrink-0">
                 <img src="https://ik.imagekit.io/mwp/MWP%20Color%20no%20background.png?updatedAt=1745982959141"
                      alt="MedwithPurpose Logo"
@@ -491,17 +490,40 @@
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Exam Results</h2> </div>
             <div class="bg-blue-50 p-4 rounded-lg mb-6 text-center flex-shrink-0 text-gray-900"> <p class="text-lg font-semibold">Your Score: <span id="score" class="text-gray-900">0</span> / <span id="total-questions-results">16</span></p> <p>Time Taken: <span id="time-taken"></span></p>
             </div>
-            <h3 class="text-xl font-semibold mb-2 flex-shrink-0 text-gray-900">Detailed Results:</h3> <p class="text-sm text-gray-900 mb-4 flex-shrink-0">Click on a question box below to review it.</p>
-            <div id="results-grid-container">
+            
+            <div id="performance-analytics-container" class="grid md:grid-cols-2 gap-6 mb-6 text-gray-900 flex-shrink-0">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold mb-2 text-center">Time Analysis</h4>
+                    <div id="time-analysis-results" class="space-y-2"></div>
                 </div>
-            <div class="mt-6 flex-shrink-0 border-t pt-4">
-                 <div class="mb-4">
-                     <label for="focus-rating" class="block text-md font-semibold text-gray-900 mb-1">My focus out of 5 (1 very low, 5 very high):</label> <input type="number" id="focus-rating" name="focus-rating" min="1" max="5" class="mt-1 block w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="1-5">
-                 </div>
-                 <div>
-                     <label for="reflection-text" class="block text-md font-semibold text-gray-900 mb-1">Main takeaway from this practice:</label> <textarea id="reflection-text" name="reflection-text" rows="3" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Reflect on your performance, strategies, or areas for improvement..."></textarea>
-                 </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold mb-2 text-center">Performance by Type</h4>
+                    <div id="type-analysis-results" class="space-y-1"></div>
+                </div>
             </div>
+
+            <h3 class="text-xl font-semibold mb-2 flex-shrink-0 text-gray-900">Detailed Results:</h3> <p class="text-sm text-gray-900 mb-4 flex-shrink-0">Click on a question box below to review it.</p>
+            <div id="results-grid-container" class="flex-shrink-0">
+                </div>
+
+            <div class="mt-6 flex-shrink-0 border-t pt-4">
+                <h3 class="text-xl font-semibold mb-4 text-gray-900">Reflection</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="reflection-q1" class="block text-md font-semibold text-gray-900 mb-1">Which question type (e.g., T/F/CT) was most challenging, and why?</label>
+                        <textarea id="reflection-q1" rows="3" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                    </div>
+                    <div>
+                        <label for="reflection-q2" class="block text-md font-semibold text-gray-900 mb-1">Which question took you the longest, and why do you think that was?</label>
+                        <textarea id="reflection-q2" rows="3" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                    </div>
+                    <div>
+                        <label for="reflection-q3" class="block text-md font-semibold text-gray-900 mb-1">Did you stick to your stated 'Area of Focus'? If not, what distracted you?</label>
+                        <textarea id="reflection-q3" rows="3" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                    </div>
+                </div>
+            </div>
+
               <div class="mt-6 text-center flex-shrink-0 flex justify-center space-x-4">
                 <button onclick="window.location.reload()" class="secondary-button px-6 py-2">
                     Try Again
@@ -539,27 +561,26 @@
 
         const questions = [
             // Questions for Passage 1: Perkin's Mauve
-            { passageIndex: 0, text: "According to the passage, what single advantage first enabled Perkin's mauve to out-compete natural purple dyes?", options: ["It cost a fraction of the price of Tyrian purple.", "It could be applied equally well to cotton and silk.", "It reached the market before Prussian blue and alizarin.", "It resisted fading when exposed to gas-lamp light."], correctAnswer: "A", explanation: "The passage does not explicitly state the cost advantage of mauveine over natural dyes. However, it mentions that the synthetic dye industry that followed converted 'coal-tar waste' into colours [8], strongly implying that the raw materials were very cheap compared to traditional sources for dyes. While not directly stated, this cost-effectiveness is the most plausible advantage among the choices that enabled synthetic dyes to compete, as the other options are either not mentioned or contradicted in the text." },
-            { passageIndex: 0, text: "What conclusion can be drawn from the passage about the interaction between Perkin's private laboratory and Britain's industrial climate in the 1850s?", options: ["Perkin's success demonstrates that individual ingenuity could thrive even without strong institutional backing.", "The rapid scale-up of mauve would have been impossible without government-funded research facilities.", "Perkin's breakthrough shows that mid-century British universities were ahead of their continental rivals in applied chemistry.", "Industrial chemists of the time were generally reluctant to collaborate with academic scientists."], correctAnswer: "A", explanation: "The passage describes William Henry Perkin as an 'eighteen-year-old' who made his discovery by mistake [6]. He subsequently 'opened Britain's first aniline factory' on his own initiative [13]. His struggles later came from German competitors who 'pooled patents' [13] and relied on 'organised, large-scale analytical discipline' [15], contrasting with his individual brilliance. This narrative supports the conclusion that Perkin's initial success was a product of individual ingenuity thriving outside of a strong institutional framework." },
-            { passageIndex: 0, text: "Which contemporary development is cited in the passage as evidence that health concerns eventually overtook the commercial appeal of early aniline dyes?", options: ["A parliamentary report linking factory effluent to river pollution", "A German tariff that restricted imports of British colourants", "The requirement that new dyes undergo photostability testing", "Pharmaceutical protocols adapted to assess textile-dye toxicity"], correctAnswer: "D", explanation: "The passage notes that 'Public health officers worried' about unregulated dyes in food, which led to 'the first lab-based safety trials by the Prussian Health Council in 1886' [12]. It also mentions that the techniques used in the dye industry 'migrated into pharmaceutical research' [9]. The safety trials for dyes represent an adaptation of scientific protocols to assess toxicity, driven by health concerns. This aligns best with option D, where protocols, related to pharmaceutical and health sciences, were used to evaluate dye safety." },
-            { passageIndex: 0, text: "The author would most likely agree that the emergence of Perkin's mauve illustrates which broader truth about the interaction between science, industry, and regulation?", options: ["Commercial success can arrive faster than the scientific tools needed to evaluate long-term safety.", "Government laboratories, rather than private companies, are best placed to detect hazards in novel products.", "International patent competition is the primary obstacle to sharing toxicological data.", "Cultural fashions generally fade before regulators can impose effective controls."], correctAnswer: "A", explanation: "Perkin's discovery in 1856 'triggered an avalanche of synthetic dyes' and commercial adoption [6, 7, 11]. However, safety trials only began in 1886, and the initial judgment of safety was 'later overturned when epidemiologists linked chronic exposure to increased liver lesions' [12]. This timeline shows that the dyes were commercially successful long before the long-term health risks were properly understood, supporting the idea that commercialization can outpace safety evaluation." },
+            { passageIndex: 0, type: 'Inference', text: "According to the passage, what single advantage first enabled Perkin's mauve to out-compete natural purple dyes?", options: ["It cost a fraction of the price of Tyrian purple.", "It could be applied equally well to cotton and silk.", "It reached the market before Prussian blue and alizarin.", "It resisted fading when exposed to gas-lamp light."], correctAnswer: "A", explanation: "The passage does not explicitly state the cost advantage of mauveine over natural dyes. However, it mentions that the synthetic dye industry that followed converted 'coal-tar waste' into colours [8], strongly implying that the raw materials were very cheap compared to traditional sources for dyes. While not directly stated, this cost-effectiveness is the most plausible advantage among the choices that enabled synthetic dyes to compete, as the other options are either not mentioned or contradicted in the text." },
+            { passageIndex: 0, type: 'Inference/Conclusion', text: "What conclusion can be drawn from the passage about the interaction between Perkin's private laboratory and Britain's industrial climate in the 1850s?", options: ["Perkin's success demonstrates that individual ingenuity could thrive even without strong institutional backing.", "The rapid scale-up of mauve would have been impossible without government-funded research facilities.", "Perkin's breakthrough shows that mid-century British universities were ahead of their continental rivals in applied chemistry.", "Industrial chemists of the time were generally reluctant to collaborate with academic scientists."], correctAnswer: "A", explanation: "The passage describes William Henry Perkin as an 'eighteen-year-old' who made his discovery by mistake [6]. He subsequently 'opened Britain's first aniline factory' on his own initiative [13]. His struggles later came from German competitors who 'pooled patents' [13] and relied on 'organised, large-scale analytical discipline' [15], contrasting with his individual brilliance. This narrative supports the conclusion that Perkin's initial success was a product of individual ingenuity thriving outside of a strong institutional framework." },
+            { passageIndex: 0, type: 'Direct Retrieval', text: "Which contemporary development is cited in the passage as evidence that health concerns eventually overtook the commercial appeal of early aniline dyes?", options: ["A parliamentary report linking factory effluent to river pollution", "A German tariff that restricted imports of British colourants", "The requirement that new dyes undergo photostability testing", "Pharmaceutical protocols adapted to assess textile-dye toxicity"], correctAnswer: "D", explanation: "The passage notes that 'Public health officers worried' about unregulated dyes in food, which led to 'the first lab-based safety trials by the Prussian Health Council in 1886' [12]. It also mentions that the techniques used in the dye industry 'migrated into pharmaceutical research' [9]. The safety trials for dyes represent an adaptation of scientific protocols to assess toxicity, driven by health concerns. This aligns best with option D, where protocols, related to pharmaceutical and health sciences, were used to evaluate dye safety." },
+            { passageIndex: 0, type: 'Inference/Conclusion', text: "The author would most likely agree that the emergence of Perkin's mauve illustrates which broader truth about the interaction between science, industry, and regulation?", options: ["Commercial success can arrive faster than the scientific tools needed to evaluate long-term safety.", "Government laboratories, rather than private companies, are best placed to detect hazards in novel products.", "International patent competition is the primary obstacle to sharing toxicological data.", "Cultural fashions generally fade before regulators can impose effective controls."], correctAnswer: "A", explanation: "Perkin's discovery in 1856 'triggered an avalanche of synthetic dyes' and commercial adoption [6, 7, 11]. However, safety trials only began in 1886, and the initial judgment of safety was 'later overturned when epidemiologists linked chronic exposure to increased liver lesions' [12]. This timeline shows that the dyes were commercially successful long before the long-term health risks were properly understood, supporting the idea that commercialization can outpace safety evaluation." },
             // Questions for Passage 2: London Coffeehouses
-            { passageIndex: 1, text: "Which of the following best explains why Charles II's attempt to close coffeehouses failed?", options: ["He lacked legal authority to interfere with private enterprise.", "Merchants convinced him that commercial information relied on coffeehouse networks.", "Coffee traders threatened to halt imports to London's port.", "Public opinion uniformly favoured unrestricted political debate."], correctAnswer: "B", explanation: "The passage explicitly states that Charles II 'rescind[ed] the ban when merchants complained that trade depended on their information flows' [78]. This directly corresponds to option B." },
-            { passageIndex: 1, text: "The author implies that coffeehouses were 'paradoxical' primarily because they:", options: ["served an intoxicating beverage while professing sobriety.", "advertised financial services without regulatory oversight.", "functioned as inclusive forums yet enforced social and political exclusions.", "remained popular despite high prices for coffee."], correctAnswer: "C", explanation: "The final sentence identifies the 'paradox of a space that promised universal access, yet constantly redrew its own boundaries' [82]. The text provides evidence for this by mentioning the 'penny university' idea of open access [73] while also noting that 'Women were typically barred from entry, and political allegiance dictated clientele' [76]. This contrast between promised inclusivity and actual exclusion is the paradox." },
-            { passageIndex: 1, text: "What conclusion can be drawn about the relationship between conversation and commerce in this period?", options: ["Financial markets were insulated from the gossip that circulated in coffeehouses.", "The flow of information in coffeehouses underpinned nascent economic institutions.", "Merchants avoided coffeehouses for fear of government informers.", "Political debate declined once coffeehouses began posting shipping bulletins."], correctAnswer: "B", explanation: "The passage gives direct examples of commerce growing from coffeehouse conversations: 'Lloyd's of London began as a corner table where underwriters tallied maritime risks' and Jonathan's coffee-house 'morphed into the London Stock Exchange' [75]. Furthermore, merchants protested the closure because 'trade depended on their information flows' [78]. This evidence strongly supports the conclusion that information exchange in coffeehouses was foundational for new economic institutions." },
-            { passageIndex: 1, text: "The passage suggests that the decline of the coffeehouse as a public forum was chiefly driven by:", options: ["an increase in coffee prices after 1760.", "the rise of alternative venues and media that re-segmented discourse.", "new temperance laws that equated coffeehouses with taverns.", "widespread fatigue with partisan newspapers left on tables."], correctAnswer: "B", explanation: "The passage attributes the decline to the fact that 'By the 1760s, private clubs and printed newspapers began to eclipse the open table, siphoning conversation into costlier venues or one-way columns' [81]. This describes a shift to alternative venues (private clubs) and media (newspapers), which re-segmented public discourse, directly matching option B." },
+            { passageIndex: 1, type: 'Direct Retrieval', text: "Which of the following best explains why Charles II's attempt to close coffeehouses failed?", options: ["He lacked legal authority to interfere with private enterprise.", "Merchants convinced him that commercial information relied on coffeehouse networks.", "Coffee traders threatened to halt imports to London's port.", "Public opinion uniformly favoured unrestricted political debate."], correctAnswer: "B", explanation: "The passage explicitly states that Charles II 'rescind[ed] the ban when merchants complained that trade depended on their information flows' [78]. This directly corresponds to option B." },
+            { passageIndex: 1, type: 'Inference/Conclusion', text: "The author implies that coffeehouses were 'paradoxical' primarily because they:", options: ["served an intoxicating beverage while professing sobriety.", "advertised financial services without regulatory oversight.", "functioned as inclusive forums yet enforced social and political exclusions.", "remained popular despite high prices for coffee."], correctAnswer: "C", explanation: "The final sentence identifies the 'paradox of a space that promised universal access, yet constantly redrew its own boundaries' [82]. The text provides evidence for this by mentioning the 'penny university' idea of open access [73] while also noting that 'Women were typically barred from entry, and political allegiance dictated clientele' [76]. This contrast between promised inclusivity and actual exclusion is the paradox." },
+            { passageIndex: 1, type: 'Inference/Conclusion', text: "What conclusion can be drawn about the relationship between conversation and commerce in this period?", options: ["Financial markets were insulated from the gossip that circulated in coffeehouses.", "The flow of information in coffeehouses underpinned nascent economic institutions.", "Merchants avoided coffeehouses for fear of government informers.", "Political debate declined once coffeehouses began posting shipping bulletins."], correctAnswer: "B", explanation: "The passage gives direct examples of commerce growing from coffeehouse conversations: 'Lloyd's of London began as a corner table where underwriters tallied maritime risks' and Jonathan's coffee-house 'morphed into the London Stock Exchange' [75]. Furthermore, merchants protested the closure because 'trade depended on their information flows' [78]. This evidence strongly supports the conclusion that information exchange in coffeehouses was foundational for new economic institutions." },
+            { passageIndex: 1, type: 'Direct Retrieval', text: "The passage suggests that the decline of the coffeehouse as a public forum was chiefly driven by:", options: ["an increase in coffee prices after 1760.", "the rise of alternative venues and media that re-segmented discourse.", "new temperance laws that equated coffeehouses with taverns.", "widespread fatigue with partisan newspapers left on tables."], correctAnswer: "B", explanation: "The passage attributes the decline to the fact that 'By the 1760s, private clubs and printed newspapers began to eclipse the open table, siphoning conversation into costlier venues or one-way columns' [81]. This describes a shift to alternative venues (private clubs) and media (newspapers), which re-segmented public discourse, directly matching option B." },
             // Questions for Passage 3: Suez Canal
-            { passageIndex: 2, text: "According to the passage, which single development most immediately enabled Britain to obtain a decisive share of the Suez Canal Company?", options: ["Ratification of the Convention of Constantinople in 1888", "Termination of corvée labour in 1864", "Khedive Ismail's sale of Egyptian shares in 1875", "Completion of the canal's southern reach in 1869"], correctAnswer: "C", explanation: "The passage clearly states: 'In 1875 the cash-strapped Khedive Ismail sold Egypt's entire stake-176,602 shares-to the British treasury for just under four million pounds, giving London an effective veto' [132]. This directly identifies the sale of shares as the event that gave Britain its decisive holding." },
-            { passageIndex: 2, text: "What was the principal consequence of nationalisation announced on 26 July 1956, as described by the author?", options: ["A change in board control from French to Egyptian directors", "A temporary closure of the canal lasting roughly eight months", "Immediate withdrawal of British military forces from Egypt", "Enlargement of the canal's width to accommodate super-tankers"], correctAnswer: "B", explanation: "The passage states that 'Nationalisation by President Nasser on 26 July 1956 provoked the Suez Crisis, closing the waterway until April 1957' [133]. The period from late July 1956 to April 1957 is approximately eight to nine months, making option B the correct description of the immediate consequence." },
-            { passageIndex: 2, text: "Which pair of dates marks the longest continuous period during which the canal was not closed?", options: ["1859-1869", "1956-1957", "1967-1975", "1882-1888"], correctAnswer: "C", explanation: "This question likely contains a typographical error and intended to ask for the longest period the canal was *closed*. The passage mentions two closures: one provoked by the Suez Crisis from July 1956 to April 1957 (about 9 months) and a 'longer shutdown' during the Arab-Israeli wars from 1967 to 1975 (8 years) [133, 134]. Of the options provided, the period in C (1967-1975) represents the longest continuous closure mentioned in the text." },
-            { passageIndex: 2, text: "The passage implies that the 2015 expansion reduced average one-way transit time by approximately:", options: ["29 hours", "24 hours", "14 hours", "5 hours"], correctAnswer: "A", explanation: "The passage states that before the expansion, a passage took 'roughly forty hours' [131]. The 2015 expansion trimmed the 'average one-way transit to eleven hours' [135]. The reduction is the difference between these two times: 40 - 11 = 29 hours." },
+            { passageIndex: 2, type: 'Direct Retrieval', text: "According to the passage, which single development most immediately enabled Britain to obtain a decisive share of the Suez Canal Company?", options: ["Ratification of the Convention of Constantinople in 1888", "Termination of corvée labour in 1864", "Khedive Ismail's sale of Egyptian shares in 1875", "Completion of the canal's southern reach in 1869"], correctAnswer: "C", explanation: "The passage clearly states: 'In 1875 the cash-strapped Khedive Ismail sold Egypt's entire stake-176,602 shares-to the British treasury for just under four million pounds, giving London an effective veto' [132]. This directly identifies the sale of shares as the event that gave Britain its decisive holding." },
+            { passageIndex: 2, type: 'Direct Retrieval', text: "What was the principal consequence of nationalisation announced on 26 July 1956, as described by the author?", options: ["A change in board control from French to Egyptian directors", "A temporary closure of the canal lasting roughly eight months", "Immediate withdrawal of British military forces from Egypt", "Enlargement of the canal's width to accommodate super-tankers"], correctAnswer: "B", explanation: "The passage states that 'Nationalisation by President Nasser on 26 July 1956 provoked the Suez Crisis, closing the waterway until April 1957' [133]. The period from late July 1956 to April 1957 is approximately eight to nine months, making option B the correct description of the immediate consequence." },
+            { passageIndex: 2, type: 'Calculation/Analysis', text: "Which pair of dates marks the longest continuous period during which the canal was not closed?", options: ["1859-1869", "1956-1957", "1967-1975", "1882-1888"], correctAnswer: "C", explanation: "This question likely contains a typographical error and intended to ask for the longest period the canal was *closed*. The passage mentions two closures: one provoked by the Suez Crisis from July 1956 to April 1957 (about 9 months) and a 'longer shutdown' during the Arab-Israeli wars from 1967 to 1975 (8 years) [133, 134]. Of the options provided, the period in C (1967-1975) represents the longest continuous closure mentioned in the text." },
+            { passageIndex: 2, type: 'Calculation/Analysis', text: "The passage implies that the 2015 expansion reduced average one-way transit time by approximately:", options: ["29 hours", "24 hours", "14 hours", "5 hours"], correctAnswer: "A", explanation: "The passage states that before the expansion, a passage took 'roughly forty hours' [131]. The 2015 expansion trimmed the 'average one-way transit to eleven hours' [135]. The reduction is the difference between these two times: 40 - 11 = 29 hours." },
             // Questions for Passage 4: Byblos Tablets
-            { passageIndex: 3, text: "The tablets prove that all the cedar used in Ashurnasirpal II's palace came from Lebanon.", options: ["True", "False", "Can't Tell"], correctAnswer: "B", explanation: "The passage states that chemical analysis suggests 'at least part of the palace...was roofed with Lebanese cedar' [180]. This confirms some cedar was from Lebanon but does not provide enough information to prove that *all* of it was. The statement is an overstatement of the evidence provided. Thus, the statement is False as the tablets do not prove this, they only prove *part* of it." },
-            { passageIndex: 3, text: "Scholars had previously believed that Egyptian builders depended exclusively on Lebanese cedar for their projects.", options: ["True", "False", "Can't Tell"], correctAnswer: "A", explanation: "The passage states, 'While the cedar forests of Lebanon were long assumed to be the sole source of timber for Pharaonic Egypt...' [178]. 'Assumed' aligns with 'believed,' and 'sole source' aligns with 'depended exclusively.' This confirms the statement is True based on the passage." },
-            { passageIndex: 3, text: "Assyria's war with Urartu likely affected the kingdom's metal reserves.", options: ["True", "False", "Can't Tell"], correctAnswer: "A", explanation: "The passage notes a switch in payments from silver to barley on the tablets, and states 'That switch hints at a temporary bullion shortage following Assyria's costly campaign against Urartu' [181, 182]. A 'bullion shortage' is an effect on metal reserves (bullion is precious metal), and 'hints at' makes the connection probable, not certain. Therefore, the statement is True." },
-            { passageIndex: 3, text: "The appearance of Aramaic cursive on the tablets challenges current timelines of Near-Eastern linguistic development.", options: ["True", "False", "Can't Tell"], correctAnswer: "A", explanation: "The passage points out that the Aramaic script found was 'thirty years earlier than any surviving papyrus from the region' [183]. A find that predates the previously earliest known example by 30 years would inherently challenge and force a revision of existing timelines for the script's development. Thus, the statement is True." }
+            { passageIndex: 3, type: 'T/F/CT', text: "The tablets prove that all the cedar used in Ashurnasirpal II's palace came from Lebanon.", options: ["True", "False", "Can't Tell"], correctAnswer: "B", explanation: "The passage states that chemical analysis suggests 'at least part of the palace...was roofed with Lebanese cedar' [180]. This confirms some cedar was from Lebanon but does not provide enough information to prove that *all* of it was. The statement is an overstatement of the evidence provided. Thus, the statement is False as the tablets do not prove this, they only prove *part* of it." },
+            { passageIndex: 3, type: 'T/F/CT', text: "Scholars had previously believed that Egyptian builders depended exclusively on Lebanese cedar for their projects.", options: ["True", "False", "Can't Tell"], correctAnswer: "A", explanation: "The passage states, 'While the cedar forests of Lebanon were long assumed to be the sole source of timber for Pharaonic Egypt...' [178]. 'Assumed' aligns with 'believed,' and 'sole source' aligns with 'depended exclusively.' This confirms the statement is True based on the passage." },
+            { passageIndex: 3, type: 'T/F/CT', text: "Assyria's war with Urartu likely affected the kingdom's metal reserves.", options: ["True", "False", "Can't Tell"], correctAnswer: "A", explanation: "The passage notes a switch in payments from silver to barley on the tablets, and states 'That switch hints at a temporary bullion shortage following Assyria's costly campaign against Urartu' [181, 182]. A 'bullion shortage' is an effect on metal reserves (bullion is precious metal), and 'hints at' makes the connection probable, not certain. Therefore, the statement is True." },
+            { passageIndex: 3, type: 'T/F/CT', text: "The appearance of Aramaic cursive on the tablets challenges current timelines of Near-Eastern linguistic development.", options: ["True", "False", "Can't Tell"], correctAnswer: "A", explanation: "The passage points out that the Aramaic script found was 'thirty years earlier than any surviving papyrus from the region' [183]. A find that predates the previously earliest known example by 30 years would inherently challenge and force a revision of existing timelines for the script's development. Thus, the statement is True." }
         ];
-
 
         // --- State ---
         let currentQuestionIndex = 0;
@@ -577,6 +598,7 @@
         let flaggedQuestions = new Array(questions.length).fill(false);
         let isFilteringFlagged = false;
         let currentlyDisplayedPassageIndex = -1;
+        let currentFontSize = 1.0; // Base font size in rem
 
 
         // --- Elements ---
@@ -616,10 +638,12 @@
         const setupQuestionCountEl = document.getElementById('setup-question-count');
         const setupTimeLimitEl = document.getElementById('setup-time-limit');
         const reviewExplanationContainer = document.getElementById('review-explanation-container');
-        const reflectionText = document.getElementById('reflection-text');
         const downloadPdfButton = document.getElementById('download-pdf-button');
-        const focusRatingInput = document.getElementById('focus-rating');
-
+        const fontDecreaseButton = document.getElementById('font-decrease-button');
+        const fontIncreaseButton = document.getElementById('font-increase-button');
+        const resizableTextElements = document.querySelectorAll('.resizable-text');
+        const timeAnalysisResultsEl = document.getElementById('time-analysis-results');
+        const typeAnalysisResultsEl = document.getElementById('type-analysis-results');
 
 
         // --- Functions ---
@@ -651,6 +675,12 @@
              const minutes = Math.floor(totalSeconds / 60);
              const seconds = totalSeconds % 60;
              return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+        
+        function formatTimeMilliseconds(milliseconds) {
+            if (!milliseconds || milliseconds < 0) return "0s";
+            const totalSeconds = Math.round(milliseconds / 1000);
+            return `${totalSeconds}s`;
         }
 
         function formatTimeDifference(milliseconds) {
@@ -686,12 +716,20 @@
             flagButton.classList.toggle('flagged', isFlagged);
         }
 
+        function updateFontSize() {
+            resizableTextElements.forEach(el => {
+                el.style.fontSize = `${currentFontSize}rem`;
+            });
+            // Adjust line-height based on font size for better readability
+            const lineHeight = currentFontSize * 1.6;
+            document.getElementById('passage-text').style.lineHeight = `${lineHeight}rem`;
+            document.getElementById('question-text').style.lineHeight = `${lineHeight * 0.9}rem`;
+        }
+
 
         function loadQuestion(index, reviewMode = false) {
             if (index < 0 || index >= questions.length) return;
-
             
-                
                  if (!isReviewingFromResults && !reviewMode) { 
                      recordTimeSpent(currentQuestionIndex);
                  }
@@ -700,7 +738,6 @@
             const newPassageIndex = question.passageIndex;
             const passageContainer = document.querySelector('.passage-column');
             const questionContainer = document.querySelector('.question-column');
-
            
             if (newPassageIndex !== currentlyDisplayedPassageIndex || reviewMode) {
                 passageTextEl.innerHTML = passages[newPassageIndex].replace(/\n/g, '<br><br>');
@@ -724,7 +761,7 @@
                 const optionId = `q${index}_opt${i}`;
                 const label = document.createElement('label');
                 label.htmlFor = optionId;
-                label.classList.add('option-label'); // Styles for this are in CSS, including text color and size
+                label.classList.add('option-label');
                 label.dataset.optionIndex = i; 
 
                 const radio = document.createElement('input');
@@ -734,7 +771,6 @@
                 radio.value = optionLetters[i]; 
                 radio.disabled = reviewMode; 
 
-                
                 label.classList.remove('border-green-500', 'border-red-500', 'border-2', 'bg-green-50', 'bg-red-50', 'selected-answer');
                 label.style.cursor = reviewMode ? 'default' : 'pointer';
 
@@ -743,7 +779,6 @@
                     radio.checked = true;
                     label.classList.add('selected-answer');
                 }
-
                
                 if (reviewMode) {
                     const isCorrectAnswer = question.correctAnswer === optionLetters[i];
@@ -763,7 +798,6 @@
 
                 if (!reviewMode) {
                     label.addEventListener('click', (e) => {
-                         
                         if (e.target.tagName !== 'INPUT') {
                             handleOptionSelect(index, i, optionLetters[i]);
                         }
@@ -772,7 +806,6 @@
                 }
                 optionsContainer.appendChild(label);
             });
-
            
             if (reviewMode && question.explanation) {
                 const explanationDiv = document.createElement('div');
@@ -780,8 +813,6 @@
                 explanationDiv.innerHTML = `<strong class="font-semibold">Explanation:</strong><br>${question.explanation.replace(/\n/g, '<br>')}`; 
                 reviewExplanationContainer.appendChild(explanationDiv);
             }
-           
-
 
             prevButton.disabled = index === 0;
             if (!reviewMode && index === questions.length - 1) { 
@@ -796,7 +827,6 @@
             }
 
             updateFlagButtonAppearance();
-
            
             if (reviewMode) {
                 backToResultsButton.classList.remove('hidden');
@@ -815,7 +845,6 @@
             }
 
             updateNavigatorHighlight(); 
-
            
             if (!isReviewingFromResults) { 
                 questionStartTime = Date.now();
@@ -823,11 +852,9 @@
         }
 
         function handleOptionSelect(questionIndex, optionIndex, optionValue) {
-             
              if (questionIndex !== currentQuestionIndex || isReviewingFromResults) return;
              userAnswers[questionIndex] = optionValue;
 
-             
              document.querySelectorAll(`#options-container .option-label`).forEach(lbl => {
                  lbl.classList.remove('selected-answer');
                  const radio = lbl.querySelector('input[type="radio"]');
@@ -842,7 +869,6 @@
               }
              updateNavigatorButtons(); 
         }
-
 
         function showNextQuestion() {
             if (isReviewingFromResults) { 
@@ -860,7 +886,6 @@
                  }
             }
         }
-
 
         function showPrevQuestion() {
              if (isReviewingFromResults) { 
@@ -884,7 +909,6 @@
            
             if (setupQuestionCountEl) setupQuestionCountEl.textContent = questions.length;
             if (setupTimeLimitEl) setupTimeLimitEl.textContent = `${Math.floor(timeLeft / 60)} minutes`;
-
         }
 
         function showExamScreen() {
@@ -896,7 +920,6 @@
             appContainer.classList.add('flex', 'flex-col'); 
             currentlyDisplayedPassageIndex = -1; 
         }
-
 
         function showReviewScreen(filterFlagged = false) {
             recordTimeSpent(currentQuestionIndex); 
@@ -914,21 +937,17 @@
                  if (filterFlagged && !flaggedQuestions[index]) { 
                      return;
                  }
-
                 const button = document.createElement('button');
                 button.textContent = index + 1;
                 button.className = 'review-grid-button'; 
-
                 if (userAnswers[index] !== null && userAnswers[index] !== undefined) {
                     button.classList.add('review-grid-button-answered');
                 } else {
                      button.classList.add('review-grid-button-unanswered');
                 }
-
                 if (flaggedQuestions[index]) {
                     button.classList.add('review-flagged'); 
                 }
-
                 button.onclick = () => {
                     reviewScreen.classList.add('hidden'); 
                     reviewScreen.classList.remove('flex');
@@ -938,7 +957,6 @@
                 };
                 reviewGrid.appendChild(button);
             });
-
              filterFlaggedButton.textContent = filterFlagged ? 'Show All Questions' : 'Show Flagged Only';
         }
 
@@ -947,20 +965,15 @@
              questions.forEach((_, index) => {
                  const button = document.createElement('button');
                  button.textContent = index + 1;
-                
                  button.classList.add('py-2', 'px-1', 'border', 'border-gray-300', 'rounded-md', 'text-center', 'transition', 'duration-150', 'ease-in-out', 'text-sm', 'hover:bg-gray-100');
                  button.dataset.questionIndex = index; 
-
-                
                  if (userAnswers[index]) button.classList.add('nav-answered');
                  if (index === currentQuestionIndex) button.classList.add('nav-current');
                  if (flaggedQuestions[index]) button.classList.add('nav-flagged');
-
                  button.onclick = () => {
                      navigatorModal.classList.remove('flex'); 
                      navigatorModal.classList.add('hidden');
                      const targetIndex = parseInt(button.dataset.questionIndex, 10);
-                    
                      loadQuestion(targetIndex, isReviewingFromResults);
                      if (!isReviewingFromResults) questionStartTime = Date.now(); 
                  };
@@ -988,6 +1001,56 @@
                  button.classList.remove('nav-current');
                  if (index === currentQuestionIndex) button.classList.add('nav-current');
              });
+        }
+
+        function analyzeAndDisplayPerformance() {
+            // Time Analysis
+            let correctTimeTotal = 0, correctCount = 0, incorrectTimeTotal = 0, incorrectCount = 0;
+            // Question Type Analysis
+            const typeStats = {};
+
+            questions.forEach((q, i) => {
+                const isCorrect = userAnswers[i] === q.correctAnswer;
+                const answered = userAnswers[i] !== null;
+                const time = questionTimes[i] || 0;
+                
+                if (answered) {
+                    if (isCorrect) {
+                        correctTimeTotal += time;
+                        correctCount++;
+                    } else {
+                        incorrectTimeTotal += time;
+                        incorrectCount++;
+                    }
+                }
+
+                const qType = q.type || 'Uncategorized';
+                if (!typeStats[qType]) {
+                    typeStats[qType] = { correct: 0, total: 0 };
+                }
+                typeStats[qType].total++;
+                if(isCorrect) {
+                    typeStats[qType].correct++;
+                }
+            });
+            
+            // Display Time Analysis
+            const avgCorrectTime = correctCount > 0 ? formatTimeMilliseconds(correctTimeTotal / correctCount) : 'N/A';
+            const avgIncorrectTime = incorrectCount > 0 ? formatTimeMilliseconds(incorrectTimeTotal / incorrectCount) : 'N/A';
+            timeAnalysisResultsEl.innerHTML = `
+                <p>Avg. time (Correct): <span class="font-bold">${avgCorrectTime}</span></p>
+                <p>Avg. time (Incorrect): <span class="font-bold">${avgIncorrectTime}</span></p>
+            `;
+            
+            // Display Type Analysis
+            typeAnalysisResultsEl.innerHTML = '';
+            Object.keys(typeStats).sort().forEach(type => {
+                const stats = typeStats[type];
+                const percentage = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+                const p = document.createElement('p');
+                p.innerHTML = `${type}: <span class="font-bold">${stats.correct}/${stats.total} (${percentage}%)</span>`;
+                typeAnalysisResultsEl.appendChild(p);
+            });
         }
 
         function showResultsScreen() {
@@ -1050,6 +1113,9 @@
             totalQuestionsResultsEl.textContent = questions.length;
             const timeDiff = examEndTime - examStartTime;
             timeTakenEl.textContent = formatTimeDifference(timeDiff);
+
+            // NEW: Call analytics function
+            analyzeAndDisplayPerformance();
         }
 
 
@@ -1074,8 +1140,9 @@
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const reflection = reflectionText.value.trim();
-            const focusRating = focusRatingInput.value; 
+            const reflection1 = document.getElementById('reflection-q1').value.trim();
+            const reflection2 = document.getElementById('reflection-q2').value.trim();
+            const reflection3 = document.getElementById('reflection-q3').value.trim();
             const finalScore = scoreEl.textContent;
             const totalQ = totalQuestionsResultsEl.textContent; 
             const timeTaken = timeTakenEl.textContent;
@@ -1087,22 +1154,18 @@
             const pageWidth = doc.internal.pageSize.width;
 
 
-           
             doc.setFontSize(18);
             doc.text("UCAT Verbal Reasoning Results", pageWidth / 2, y, { align: 'center' });
             y += lineHeight * 2;
 
-           
             doc.setFontSize(12);
             const summaryData = [
                 ["Name:", userName || 'N/A'],
                 ["Goal:", `${userGoal || 'N/A'} / ${totalQ}`],
                 ["Focus Area:", userFocusArea || 'N/A'],
                 ["Final Score:", `${finalScore} / ${totalQ}`],
-                ["Time Taken:", timeTaken],
-                ["Focus Rating (1-5):", focusRating || 'N/A']
+                ["Time Taken:", timeTaken]
             ];
-
             summaryData.forEach(row => {
                 if (y > pageHeight - margin - lineHeight) { doc.addPage(); y = margin; }
                 doc.setFont(undefined, 'bold');
@@ -1113,23 +1176,35 @@
             });
             y += lineHeight; 
 
-           
-            if (y > pageHeight - margin - (lineHeight*3)) { doc.addPage(); y = margin; } 
+            // Add Granular Reflections to PDF
             doc.setFontSize(14);
             doc.setFont(undefined, 'bold');
-            doc.text("Main Takeaway:", margin, y);
+            doc.text("Reflections", margin, y);
             y += lineHeight;
-            doc.setFontSize(10);
-            doc.setFont(undefined, 'normal');
-            const reflectionLines = doc.splitTextToSize(reflection || 'No reflection provided.', pageWidth - margin * 2);
-            reflectionLines.forEach(line => {
-                if (y > pageHeight - margin - lineHeight) { doc.addPage(); y = margin; }
-                doc.text(line, margin, y);
-                y += (lineHeight * 0.8);
-            });
-            y += lineHeight; 
+            
+            const reflections = [
+                {q: document.getElementById('reflection-q1').previousElementSibling.textContent, a: reflection1},
+                {q: document.getElementById('reflection-q2').previousElementSibling.textContent, a: reflection2},
+                {q: document.getElementById('reflection-q3').previousElementSibling.textContent, a: reflection3},
+            ];
 
-           
+            reflections.forEach(item => {
+                if (y > pageHeight - margin - (lineHeight*4)) { doc.addPage(); y = margin; }
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.text(item.q, margin, y);
+                y += lineHeight * 0.9;
+                doc.setFont(undefined, 'normal');
+                const answerLines = doc.splitTextToSize(item.a || 'No answer provided.', pageWidth - margin * 2);
+                answerLines.forEach(line => {
+                    if (y > pageHeight - margin - lineHeight) { doc.addPage(); y = margin; }
+                    doc.text(line, margin, y);
+                    y += (lineHeight * 0.8);
+                });
+                y += lineHeight;
+            });
+
+            // Add Detailed Results
             if (y > pageHeight - margin - (lineHeight*2)) { doc.addPage(); y = margin; }
             doc.setFontSize(14);
             doc.setFont(undefined, 'bold');
@@ -1138,39 +1213,32 @@
             doc.setFontSize(9); 
             doc.setFont(undefined, 'normal');
 
-           
             questions.forEach((qData, index) => {
                 const userAnswer = userAnswers[index];
                 const correctAnswer = qData.correctAnswer;
                 const isCorrect = userAnswer !== null && userAnswer !== undefined && userAnswer === correctAnswer;
                 const status = isCorrect ? "Correct" : (userAnswer ? "Incorrect" : "Not Answered");
                 const timeSpentSec = Math.round((questionTimes[index] || 0) / 1000);
-
                 const questionDetails = [
-                     `Q${index + 1}: ${qData.text.substring(0, 60)}...${flaggedQuestions[index] ? ' (Flagged)' : ''}`,
+                     `Q${index + 1} (${qData.type}): ${qData.text.substring(0, 50)}...${flaggedQuestions[index] ? ' (Flagged)' : ''}`,
                      `  Your Answer: ${userAnswer || 'N/A'}`,
                      `  Correct Answer: ${correctAnswer}`,
                      `  Status: ${status}`,
                      `  Time: ${timeSpentSec}s`
                 ];
-
-               
                 const blockHeight = questionDetails.length * (lineHeight * 0.75) + (qData.explanation ? 3 * (lineHeight*0.75) : 0);
                 if (y + blockHeight > pageHeight - margin) {
                     doc.addPage();
                     y = margin; 
-                   
                     doc.setFontSize(14); doc.setFont(undefined, 'bold');
                     doc.text("Detailed Results (Continued):", margin, y);
                     y += lineHeight * 1.5;
                     doc.setFontSize(9); doc.setFont(undefined, 'normal');
                 }
-
                 questionDetails.forEach(detailLine => {
                     doc.text(detailLine, margin, y);
                     y += (lineHeight * 0.75);
                 });
-
                 if (qData.explanation) {
                     const explLines = doc.splitTextToSize(`  Explanation: ${qData.explanation.replace(/\n/g, ' ')}`, pageWidth - (margin * 2.5)); 
                     explLines.forEach(explLine => {
@@ -1191,7 +1259,6 @@
             userName = nameInput.value.trim();
             userGoal = goalInput.value.trim();
             userFocusArea = focusAreaInput.value.trim();
-
            
             timeLeft = 10 * 60; 
             userAnswers = new Array(questions.length).fill(null);
@@ -1239,16 +1306,27 @@
             isFilteringFlagged = !isFilteringFlagged;
             showReviewScreen(isFilteringFlagged); 
         });
-
        
         downloadPdfButton.addEventListener('click', generatePDF);
 
+        fontIncreaseButton.addEventListener('click', () => {
+            if(currentFontSize < 1.5) { // Max font size
+                currentFontSize += 0.1;
+                updateFontSize();
+            }
+        });
+
+        fontDecreaseButton.addEventListener('click', () => {
+            if (currentFontSize > 0.8) { // Min font size
+                currentFontSize -= 0.1;
+                updateFontSize();
+            }
+        });
 
        
         function handleKeyboardShortcuts(e) {
              const isExamVisible = !examScreen.classList.contains('hidden');
              const isModalVisible = navigatorModal.classList.contains('flex');
-            
              const isInputFocused = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
 
              if (isModalVisible || isInputFocused) return; 
@@ -1276,7 +1354,6 @@
                          return; 
                  }
              } else { 
-                
                  if (['a', 'b', 'c', 'd'].includes(key) && !isReviewingFromResults) {
                      e.preventDefault();
                      const optionIndex = ['a', 'b', 'c', 'd'].indexOf(key);
@@ -1292,9 +1369,9 @@
 
         document.addEventListener('keydown', handleKeyboardShortcuts);
 
-
         // --- Initial Load ---
         showSetupScreen(); // Start with the setup screen
+        updateFontSize(); // Set initial font size
 
     </script>
 </body>
