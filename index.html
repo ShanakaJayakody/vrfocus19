@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UCAT VR Practice - MedwithPurpose</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* Custom styles for better UI/UX */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling on body */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff; /* UPDATED: Body background to white */
+        }
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 2rem); 
+            width: 100%;
+            background-color: #ffffff; 
+            border: 1px solid #d1d5db; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 0.375rem; 
+            margin: 1rem; 
+            overflow: hidden; 
+        }
+        /* Header and Footer */
+        .header-bar, .footer-bar {
+            flex-shrink: 0; 
+            background-color: #006DAA; 
+            color: white; 
+            padding: 0.75rem 1.5rem; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-bar span, .header-bar div {
+             color: white;
+        }
+        #timer {
+             background-color: rgba(255, 255, 255, 0.2); 
+             color: white;
+             font-weight: bold;
+             padding: 0.25rem 0.75rem; 
+             border-radius: 0.25rem; 
+        }
+        .footer-bar button {
+            background-color: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            padding: 0.4rem 0.8rem; 
+            font-size: 0.8rem; 
+            border-radius: 0.375rem;
+             transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .footer-bar button:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.15); 
+            border-color: white;
+        }
+         .footer-bar button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+             border-color: rgba(255, 255, 255, 0.3);
+         }
+         .footer-bar button#next-button {
+             background-color: #ffffff; 
+             color: #006DAA; 
+             border: 1px solid white;
+             font-weight: 500;
+         }
+         .footer-bar button#next-button:hover:not(:disabled) {
+             background-color: #f0f0f0; 
+         }
+         #flag-button {
+             background-color: transparent;
+             border: 1px solid white;
+             color: white;
+             transition: background-color 0.2s ease, color 0.2s ease; 
+         }
+         #flag-button:hover {
+             background-color: white;
+             color: #006DAA;
+         }
+          #flag-button.flagged {
+             background-color: #facc15; 
+             border-color: #facc15;
+             color: #422006; 
+          }
+          #flag-button.flagged:hover {
+             background-color: #f59e0b; 
+             border-color: #f59e0b;
+          }
+
+        .main-content-area {
+            flex-grow: 1; 
+            display: flex;
+            overflow: hidden; 
+            padding: 1rem; 
+            gap: 1rem; 
+        }
+        .passage-column {
+            flex: 0 0 60%; 
+            overflow-y: auto; 
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            background-color: #ffffff; 
+            height: 100%; 
+        }
+        .question-column {
+             flex: 0 0 40%; 
+             overflow-y: auto; 
+             padding: 1rem;
+             border: 1px solid #e5e7eb;
+             border-radius: 0.375rem;
+             background-color: #ffffff; 
+             height: 100%; 
+             position: relative; 
+        }
+
+        .selected-answer {
+            background-color: #bfdbfe !important; 
+            border-color: #3b82f6 !important; 
+        }
+        .nav-answered {
+            background-color: #a7f3d0; 
+        }
+        .nav-current {
+            border: 2px solid #3b82f6 !important; 
+            font-weight: bold;
+        }
+        .nav-flagged, .review-flagged {
+            border: 2px solid #f59e0b !important; 
+            position: relative; 
+        }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+        .modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 0.5rem; }
+        .modal.flex { display: flex; }
+
+        button, .button {
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+        }
+        button:active, .button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .primary-button { background-color: #3b82f6; color: white; border: 1px solid transparent; }
+        .primary-button:hover:not(:disabled) { background-color: #2563eb; }
+        .secondary-button { background-color: white; color: #374151; border: 1px solid #d1d5db; }
+        .secondary-button:hover:not(:disabled) { background-color: #f9fafb; }
+        .danger-button { background-color: #ef4444; color: white; border: 1px solid transparent; }
+        .danger-button:hover:not(:disabled) { background-color: #dc2626; }
+        .subtle-button { background-color: #f3f4f6; color: #374151; border: 1px solid transparent; }
+        .subtle-button:hover:not(:disabled) { background-color: #e5e7eb; }
+
+        .option-label {
+            display: block;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db; 
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            background-color: #ffffff; 
+            color: #111827; 
+            font-size: 1rem;  
+        }
+        .option-label:hover:not(.selected-answer) { 
+            background-color: #f3f4f6; 
+            border-color: #a5b4fc; 
+        }
+        input[type="radio"] { display: none; }
+
+       .correct-answer-li { background-color: #dcfce7; border-left: 4px solid #22c55e; }
+       .incorrect-answer-li { background-color: #fee2e2; border-left: 4px solid #ef4444; }
+       .result-item-clickable-li { 
+           cursor: pointer;
+           transition: background-color 0.2s ease-in-out;
+           border: 1px solid #e5e7eb;
+           border-radius: 0.5rem;
+           margin-bottom: 0.5rem;
+           padding: 0.75rem;
+       }
+       .result-item-clickable-li:hover {
+           background-color: #f0f0f0;
+       }
+       .correct-indicator-text { color: #16a34a; font-weight: 600;}
+       .incorrect-indicator-text { color: #dc2626; font-weight: 600;}
+
+        #results-grid-container { 
+            display: grid;
+            grid-template-columns: repeat(8, 1fr); /* 8 columns */
+            grid-template-rows: repeat(2, 1fr); /* 2 rows */
+            gap: 0.75rem; /* Balanced spacing between boxes */
+            padding: 1rem 0; 
+            overflow-y: auto; 
+            max-width: 100%; /* Use full width of container */
+            width: 100%;
+            margin: 0 auto; /* Center the grid */
+        }
+        .result-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1 / 1; /* Keep boxes square */
+            padding: 0.5rem; /* Padding for better content display */
+            border-radius: 0.375rem;
+            color: white; 
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 0.25rem;
+            width: 100%;
+            height: auto;
+            min-width: 3rem; /* Minimum width */
+        }
+        .result-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .result-box-correct {
+            background-color: #22c55e; 
+            border: 1px solid #16a34a; 
+        }
+        .result-box-incorrect {
+            background-color: #ef4444; 
+            border: 1px solid #dc2626; 
+        }
+        .result-box-flagged { 
+            outline: 2px solid #f59e0b; 
+            outline-offset: 2px;
+        }
+        .result-box .time-spent {
+            font-size: 1rem; /* Balanced font size */
+            font-weight: 600; 
+            line-height: 1.1;
+        }
+        .question-num-label {
+            font-size: 0.75rem; /* Balanced font size */
+            color: #374151;
+            text-align: center;
+            width: 100%;
+        }
+       
+        /* Media queries for responsive grid */
+        @media (max-width: 992px) {
+            #results-grid-container {
+                grid-template-columns: repeat(8, 1fr);
+                max-width: 100%;
+            }
+        }
+        @media (max-width: 768px) {
+            #results-grid-container {
+                grid-template-columns: repeat(4, 1fr); /* 4 columns on medium screens */
+                grid-template-rows: repeat(4, 1fr); /* 4 rows on medium screens */
+                max-width: 100%;
+                gap: 0.5rem;
+            }
+        }
+        @media (max-width: 480px) {
+            #results-grid-container {
+                grid-template-columns: repeat(4, 1fr); /* Changed from 2 to 4 columns */
+                grid-template-rows: repeat(4, 1fr); /* Changed from 8 to 4 rows */
+                gap: 0.4rem;
+            }
+            .result-box .time-spent {
+                font-size: 0.85rem;
+            }
+        }
+         .explanation-box {
+             background-color: #f3f4f6; 
+             border: 1px solid #d1d5db;   
+             padding: 0.5rem 0.75rem; 
+             margin-top: 0.75rem; 
+             border-radius: 0.375rem; 
+             font-size: 0.875rem; 
+             color: #111827; 
+         }
+
+         .review-grid-button {
+             padding: 0.5rem 0.25rem; 
+             border: 1px solid #d1d5db; 
+             border-radius: 0.375rem;
+             text-align: center;
+             transition: background-color 0.2s ease, border-color 0.2s ease;
+             font-size: 0.875rem;
+             line-height: 1.25rem;
+             cursor: pointer;
+         }
+         .review-grid-button-answered {
+             background-color: #dcfce7; 
+             border-color: #86efac; 
+             color: #15803d; 
+         }
+         .review-grid-button-unanswered {
+             background-color: #f3f4f6; 
+             border-color: #d1d5db; 
+             color: #4b5563; 
+         }
+          .review-grid-button:hover {
+             filter: brightness(95%); 
+          }
+
+        @media (max-width: 768px) {
+            #app-container {
+                 height: auto; 
+                 margin: 0.5rem;
+            }
+            .main-content-area {
+                flex-direction: column; 
+                padding: 0.5rem;
+                gap: 0.5rem;
+            }
+            .passage-column, .question-column {
+                flex-basis: auto;
+                width: 100%; 
+                height: auto; 
+                max-height: 40vh; 
+                padding: 0.75rem;
+            }
+            .header-bar, .footer-bar {
+                padding: 0.5rem 1rem;
+            }
+            .header-bar span, .footer-bar button { 
+                font-size: 0.8rem;
+            }
+            button, .button {
+                padding: 0.4rem 0.8rem;
+            }
+             .footer-bar button {
+                 padding: 0.3rem 0.6rem;
+                 font-size: 0.75rem;
+             }
+            .grid-cols-5 { grid-template-columns: repeat(4, minmax(0, 1fr)); } 
+            #review-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } 
+            .review-grid-button { font-size: 0.8rem; }
+            /* #results-grid-container { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); } REMOVED to keep 8 columns */
+        }
+        @media (max-width: 480px) {
+             .grid-cols-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } 
+             #review-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } 
+             .header-bar span, .footer-bar button { font-size: 0.75rem; }
+             button, .button {
+                 padding: 0.3rem 0.6rem;
+             }
+              .footer-bar button {
+                 padding: 0.25rem 0.5rem;
+                 font-size: 0.7rem;
+              }
+             .option-label { padding: 0.5rem 0.75rem; font-size: 0.875rem;} 
+             .review-grid-button { font-size: 0.75rem; }
+             /* #results-grid-container { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); } REMOVED to keep 8 columns */
+         }
+         /* UPDATED: Media queries for result box text on smaller screens with 8 columns */
+        @media (max-width: 600px) { 
+            #results-grid-container {
+                gap: 0.25rem; /* Further reduce gap for small screens */
+            }
+            .result-box .time-spent {
+                font-size: 0.875rem; /* text-sm */
+            }
+            .result-box .question-num-label {
+                font-size: 0.6rem; 
+            }
+        }
+        @media (max-width: 400px) { 
+            .result-box .time-spent {
+                font-size: 0.75rem; /* text-xs */
+            }
+            .result-box .question-num-label {
+                font-size: 0.5rem; 
+            }
+              .result-box {
+                padding: 0.1rem; /* Minimal padding for very small squares */
+              }
+        }
+
+
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    </head>
+<body>
+
+    <div id="app-container">
+
+        <div id="setup-screen" class="p-6 md:p-8 flex flex-col justify-center items-center h-full">
+             <div class="text-center mb-6">
+                <img src="https://ik.imagekit.io/mwp/MWP%20Color%20no%20background.png?updatedAt=1745982959141"
+                     alt="MedwithPurpose Logo"
+                     class="mx-auto h-20 w-auto mb-4"
+                     onerror="this.style.display='none'; this.onerror=null;">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">UCAT Verbal Reasoning Practice</h1> <p class="text-gray-900 mt-2">Prepare for the UCAT VR section.</p> <p class="text-sm text-gray-900 mt-4"> This section contains <strong id="setup-question-count">16 questions</strong> and you have <strong id="setup-time-limit">10 minutes</strong> to complete it.
+                </p>
+            </div>
+            <div class="space-y-4 w-full max-w-md">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-900">Name:</label> <input type="text" id="name" name="name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Enter your name">
+                </div>
+                <div>
+                    <label for="goal" class="block text-sm font-medium text-gray-900">Goal (Score out of 16):</label> <input type="number" id="goal" name="goal" min="0" max="16" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="e.g., 12">
+                </div>
+                <div>
+                    <label for="focus-area" class="block text-sm font-medium text-gray-900">Area of Focus / Intention For Practice:</label> <input type="text" id="focus-area" name="focus-area" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="e.g., True/False/Can't Tell, Speed">
+                </div>
+            </div>
+            <div class="mt-8 text-center">
+                <button id="start-button" class="primary-button text-lg px-8 py-3">
+                    Start Exam
+                </button>
+            </div>
+        </div>
+
+        <div id="exam-screen" class="hidden flex flex-col h-full">
+            <div class="header-bar">
+                <span id="exam-title" class="font-semibold">Verbal Reasoning</span>
+                <div class="flex items-center space-x-4">
+                    <div id="timer" class="text-base px-3 py-1 rounded-md">10:00</div>
+                    <span class="text-sm">Question <span id="question-number-info">1</span> of 16</span>
+                    <button id="flag-button" class="text-sm font-medium border border-white rounded px-2 py-1 transition-colors duration-150">
+                          Flag for Review
+                    </button>
+                </div>
+            </div>
+
+            <div class="main-content-area">
+                <div class="passage-column">
+                    <h3 class="text-lg font-semibold mb-2 sticky top-0 bg-white text-gray-900 pb-1">Passage <span id="passage-number">1</span></h3>
+                    <div id="passage-text" class="text-base text-gray-900 leading-relaxed whitespace-pre-wrap">
+                        </div>
+                </div>
+
+                <div class="question-column">
+                     <h4 class="text-md font-semibold mb-3 sticky top-0 bg-white text-gray-900 pb-1">Question <span id="question-number">1</span></h4>
+                    <p id="question-text" class="mb-4 text-gray-900 text-base">
+                        </p>
+                    <div id="options-container" class="space-y-2">
+                        </div>
+                    <div id="review-explanation-container"></div>
+                </div>
+            </div>
+
+            <div class="footer-bar">
+                <button id="back-to-results-button" class="hidden mr-auto">← Back to Results</button>
+                <button id="end-exam-button-footer">End Exam</button>
+                <div class="flex items-center space-x-2 ml-auto">
+                    <button id="prev-button" disabled>← Previous (Alt+P)</button>
+                    <button id="navigator-button">Navigator</button>
+                    <button id="next-button">Next (Alt+N) →</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="review-screen" class="hidden p-6 md:p-8 flex flex-col items-center h-full overflow-y-auto">
+             <div class="w-full max-w-3xl mb-4 flex justify-between items-center">
+                 <h2 class="text-2xl font-bold text-gray-900">Review Your Answers</h2> <button id="filter-flagged-button" class="secondary-button text-sm">Show Flagged Only</button>
+            </div>
+             <p class="text-center text-gray-900 mb-6">Click on a question number to review it. Green indicates answered, Yellow border indicates flagged.</p> <div id="review-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-3 mb-6 w-full max-w-3xl">
+                </div>
+            <div class="mt-auto pt-6">
+                <button id="end-exam-button" class="danger-button text-lg px-8 py-3">
+                    End Exam & See Results
+                </button>
+            </div>
+        </div>
+
+        <div id="results-screen" class="hidden p-6 md:p-8 flex flex-col h-full">
+             <div class="text-center mb-6 flex-shrink-0">
+                <img src="https://ik.imagekit.io/mwp/MWP%20Color%20no%20background.png?updatedAt=1745982959141"
+                     alt="MedwithPurpose Logo"
+                     class="mx-auto h-16 w-auto mb-4"
+                     onerror="this.style.display='none'; this.onerror=null;">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Exam Results</h2> </div>
+            <div class="bg-blue-50 p-4 rounded-lg mb-6 text-center flex-shrink-0 text-gray-900"> <p class="text-lg font-semibold">Your Score: <span id="score" class="text-gray-900">0</span> / <span id="total-questions-results">16</span></p> <p>Time Taken: <span id="time-taken"></span></p>
+            </div>
+            <h3 class="text-xl font-semibold mb-2 flex-shrink-0 text-gray-900">Detailed Results:</h3> <p class="text-sm text-gray-900 mb-4 flex-shrink-0">Click on a question box below to review it.</p>
+            <div id="results-grid-container">
+                </div>
+            <div class="mt-6 flex-shrink-0 border-t pt-4">
+                 <div class="mb-4">
+                     <label for="focus-rating" class="block text-md font-semibold text-gray-900 mb-1">My focus out of 5 (1 very low, 5 very high):</label> <input type="number" id="focus-rating" name="focus-rating" min="1" max="5" class="mt-1 block w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="1-5">
+                 </div>
+                 <div>
+                     <label for="reflection-text" class="block text-md font-semibold text-gray-900 mb-1">Main takeaway from this practice:</label> <textarea id="reflection-text" name="reflection-text" rows="3" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Reflect on your performance, strategies, or areas for improvement..."></textarea>
+                 </div>
+            </div>
+              <div class="mt-6 text-center flex-shrink-0 flex justify-center space-x-4">
+                <button onclick="window.location.reload()" class="secondary-button px-6 py-2">
+                    Try Again
+                </button>
+                <button id="download-pdf-button" class="primary-button px-6 py-2">
+                    Download Results PDF
+                </button>
+            </div>
+        </div>
+
+        <div id="navigator-modal" class="modal">
+            <div class="modal-content bg-white p-6 rounded-lg shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900">Question Navigator</h3> <button id="close-modal-button" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+                </div>
+                 <p class="text-sm text-gray-900 mb-4">Click a number to jump. Green: answered, Yellow border: flagged.</p> <div id="navigator-grid" class="grid grid-cols-5 gap-3">
+                     </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Data ---
+        const passages = [
+            // Passage 1: Perkin's Mauve
+            `Artificial colour was once the province of alchemy and accident. In 1856, the eighteen-year-old William Henry Perkin-while trying to synthesise the antimalarial drug quinine-produced a vivid purple sludge that dyed silk permanently. The mistake, later christened mauveine, triggered an avalanche of synthetic dyes. During the next forty years chemical firms along the Rhine converted coal-tar waste into a spectrum of reliable hues; in the process they devised techniques (fractional distillation, analytic spectroscopy) that soon migrated into pharmaceutical research. By 1900, three-quarters of the German dye industry's patents cited medical applications, even though the firms still marketed themselves primarily as colour merchants.\nYet the new colours had cultural and economic shadows. Textile manufacturers in Lyons and Manchester embraced aniline dyes because they fixed quickly to cotton, but painters of the French Impressionist circle complained that the same pigments faded unpredictably on canvas. Public health officers worried, too: early food producers, eager to imitate the deep yellows of free-range butter, added unregulated dyes to margarine, prompting the first lab-based safety trials by the Prussian Health Council in 1886. Those experiments concluded that the quantities then used were "physiologically insignificant," a judgement later overturned when epidemiologists linked chronic exposure to increased liver lesions in laboratory animals.\nParadoxically, Perkin himself never profited extensively. Having opened Britain's first aniline factory on the banks of the Grand Union Canal, he struggled against German competitors who pooled patents and undercut prices abroad. By 1874 he sold the plant and shifted to pure research, eventually isolating alizarin red-a synthetic version of the dye that had been extracted from madder roots since Roman times. His lecture tours in the United States were packed, but he advised young chemists that commercial success depended less on brilliance than on "organised, large-scale analytical discipline," a principle that presaged the twentieth-century pharmaceutical conglomerate.\nToday, historians debate whether synthetic dyes were a medical revolution in disguise or merely a fortunate by-product of industrial fashion. Either way, Perkin's purple mistake continues to colour the story of how curiosity, commerce and caution intermingle in the laboratory.`,
+            // Passage 2: London Coffeehouses
+            `By the late seventeenth century, London had more than 2,000 coffeehouses, each one a node in what contemporaries called the "penny university." For the price of a cup, merchants compared shipping news, pamphleteers tested arguments, and jobseekers posted handwritten bills. Lloyd's of London began as a corner table where underwriters tallied maritime risks, while Isaac Newton reportedly checked currency prices at Jonathan's, a coffee-house that morphed into the London Stock Exchange.\nYet coffeehouses were hardly democratic utopias. Women were typically barred from entry, and political allegiance dictated clientele: Tory papers piled up at one establishment, Whig broadsheets at another. Government informers circulated, noting seditious jokes and forwarding names to the Secretary of State's office. In 1675 Charles II briefly ordered all coffeehouses closed, declaring them "seminaries of sedition," only to rescind the ban when merchants complained that trade depended on their information flows.\nThe drink itself mattered less than the choreography of talk. Unlike taverns, coffeehouses prided themselves on sobriety; drunkenness was discouraged, debate expected. Still, critics saw performance rather than substance-Samuel Johnson quipped that some patrons "disputed themselves into absent-minded bankruptcy." By the 1760s, private clubs and printed newspapers began to eclipse the open table, siphoning conversation into costlier venues or one-way columns. What remained was the paradox of a space that promised universal access, yet constantly redrew its own boundaries.`,
+            // Passage 3: Suez Canal
+            `By mid-nineteenth-century Europe, an all-water link between the Mediterranean and the Red Sea was no longer an engineer's day-dream but a geopolitical priority. Between 1854 and 1856 the French diplomat Ferdinand de Lesseps secured two Ottoman firmans granting his Suez Canal Company a 99-year concession; Egypt kept about forty-four percent of the shares, French investors a bare majority, and the balance was left for public subscription. Ground was broken at Port Said on 25 April 1859; excavation advanced in three stages-north trench, Bitter Lakes cut, southern reach-and, despite abolition of corvée labour under British pressure in 1864, as many as thirty thousand workers were still on site at peak. When the canal finally opened on 17 November 1869-with the imperial yacht L'Aigle leading a flotilla of sixty-five vessels-the budget had swollen to 432 million French francs and the 164-kilometre passage took a steamer roughly forty hours.\nFinancial drama followed faster than ships. In 1875 the cash-strapped Khedive Ismail sold Egypt's entire stake-176,602 shares-to the British treasury for just under four million pounds, giving London an effective veto even while French directors retained board control. The Convention of Constantinople (1888) proclaimed the canal a neutral thoroughfare, yet British troops continued to garrison its banks after occupying Egypt in 1882. Nationalisation by President Nasser on 26 July 1956 provoked the Suez Crisis, closing the waterway until April 1957; a longer shutdown came during the Arab-Israeli wars from 1967 to 1975, when fifteen stranded freighters-the "Yellow Fleet"-rusted in the Great Bitter Lake. A 2015 expansion added a 35-kilometre parallel channel and widened key reaches, trimming average one-way transit to eleven hours and raising daily capacity to nearly a hundred ships.\nThus a project conceived in the age of steam survives in the era of container giants, its ownership, neutrality, and even geometry repeatedly redrawn.`,
+            // Passage 4: Byblos Tablets
+            `Recent excavations near the ancient port of Byblos have uncovered cedar-wood tablets inscribed with shipping tallies dated to 892 BCE. While the cedar forests of Lebanon were long assumed to be the sole source of timber for Pharaonic Egypt, the tablets record six shipments-total volume 240 tons-delivered instead to the Assyrian city of Nimrud. The discovery surprised archaeologists because Nimrud's monumental palaces were thought to rely mainly on local conifer. Chemical analysis of resin traces on the tablets matched residues found on beams in the throne-room of Ashurnasirpal II, suggesting that at least part of the palace, completed in 879 BCE, was roofed with Lebanese cedar rather than Syrian fir as previously believed.\nA second layer of notes, added in a different hand around 860 BCE, lists payments not in silver but in quantities of barley. That switch hints at a temporary bullion shortage following Assyria's costly campaign against Urartu. Textual specialists also point out that the later scribe used an early form of Aramaic cursive-thirty years earlier than any surviving papyrus from the region. Together, the finds force historians to reconsider both the economic reach of Byblos merchants and the speed with which Aramaic spread as a practical script for trade.`
+        ];
+
+        const questions = [
+            // Questions for Passage 1: Perkin's Mauve
+            { passageIndex: 0, text: "According to the passage, what single advantage first enabled Perkin's mauve to out-compete natural purple dyes?", options: ["It cost a fraction of the price of Tyrian purple.", "It could be applied equally well to cotton and silk.", "It reached the market before Prussian blue and alizarin.", "It resisted fading when exposed to gas-lamp light."], correctAnswer: "A", explanation: "The passage does not explicitly state the cost advantage of mauveine over natural dyes. However, it mentions that the synthetic dye industry that followed converted 'coal-tar waste' into colours [8], strongly implying that the raw materials were very cheap compared to traditional sources for dyes. While not directly stated, this cost-effectiveness is the most plausible advantage among the choices that enabled synthetic dyes to compete, as the other options are either not mentioned or contradicted in the text." },
+            { passageIndex: 0, text: "What conclusion can be drawn from the passage about the interaction between Perkin's private laboratory and Britain's industrial climate in the 1850s?", options: ["Perkin's success demonstrates that individual ingenuity could thrive even without strong institutional backing.", "The rapid scale-up of mauve would have been impossible without government-funded research facilities.", "Perkin's breakthrough shows that mid-century British universities were ahead of their continental rivals in applied chemistry.", "Industrial chemists of the time were generally reluctant to collaborate with academic scientists."], correctAnswer: "A", explanation: "The passage describes William Henry Perkin as an 'eighteen-year-old' who made his discovery by mistake [6]. He subsequently 'opened Britain's first aniline factory' on his own initiative [13]. His struggles later came from German competitors who 'pooled patents' [13] and relied on 'organised, large-scale analytical discipline' [15], contrasting with his individual brilliance. This narrative supports the conclusion that Perkin's initial success was a product of individual ingenuity thriving outside of a strong institutional framework." },
+            { passageIndex: 0, text: "Which contemporary development is cited in the passage as evidence that health concerns eventually overtook the commercial appeal of early aniline dyes?", options: ["A parliamentary report linking factory effluent to river pollution", "A German tariff that restricted imports of British colourants", "The requirement that new dyes undergo photostability testing", "Pharmaceutical protocols adapted to assess textile-dye toxicity"], correctAnswer: "D", explanation: "The passage notes that 'Public health officers worried' about unregulated dyes in food, which led to 'the first lab-based safety trials by the Prussian Health Council in 1886' [12]. It also mentions that the techniques used in the dye industry 'migrated into pharmaceutical research' [9]. The safety trials for dyes represent an adaptation of scientific protocols to assess toxicity, driven by health concerns. This aligns best with option D, where protocols, related to pharmaceutical and health sciences, were used to evaluate dye safety." },
+            { passageIndex: 0, text: "The author would most likely agree that the emergence of Perkin's mauve illustrates which broader truth about the interaction between science, industry, and regulation?", options: ["Commercial success can arrive faster than the scientific tools needed to evaluate long-term safety.", "Government laboratories, rather than private companies, are best placed to detect hazards in novel products.", "International patent competition is the primary obstacle to sharing toxicological data.", "Cultural fashions generally fade before regulators can impose effective controls."], correctAnswer: "A", explanation: "Perkin's discovery in 1856 'triggered an avalanche of synthetic dyes' and commercial adoption [6, 7, 11]. However, safety trials only began in 1886, and the initial judgment of safety was 'later overturned when epidemiologists linked chronic exposure to increased liver lesions' [12]. This timeline shows that the dyes were commercially successful long before the long-term health risks were properly understood, supporting the idea that commercialization can outpace safety evaluation." },
+            // Questions for Passage 2: London Coffeehouses
+            { passageIndex: 1, text: "Which of the following best explains why Charles II's attempt to close coffeehouses failed?", options: ["He lacked legal authority to interfere with private enterprise.", "Merchants convinced him that commercial information relied on coffeehouse networks.", "Coffee traders threatened to halt imports to London's port.", "Public opinion uniformly favoured unrestricted political debate."], correctAnswer: "B", explanation: "The passage explicitly states that Charles II 'rescind[ed] the ban when merchants complained that trade depended on their information flows' [78]. This directly corresponds to option B." },
+            { passageIndex: 1, text: "The author implies that coffeehouses were 'paradoxical' primarily because they:", options: ["served an intoxicating beverage while professing sobriety.", "advertised financial services without regulatory oversight.", "functioned as inclusive forums yet enforced social and political exclusions.", "remained popular despite high prices for coffee."], correctAnswer: "C", explanation: "The final sentence identifies the 'paradox of a space that promised universal access, yet constantly redrew its own boundaries' [82]. The text provides evidence for this by mentioning the 'penny university' idea of open access [73] while also noting that 'Women were typically barred from entry, and political allegiance dictated clientele' [76]. This contrast between promised inclusivity and actual exclusion is the paradox." },
+            { passageIndex: 1, text: "What conclusion can be drawn about the relationship between conversation and commerce in this period?", options: ["Financial markets were insulated from the gossip that circulated in coffeehouses.", "The flow of information in coffeehouses underpinned nascent economic institutions.", "Merchants avoided coffeehouses for fear of government informers.", "Political debate declined once coffeehouses began posting shipping bulletins."], correctAnswer: "B", explanation: "The passage gives direct examples of commerce growing from coffeehouse conversations: 'Lloyd's of London began as a corner table where underwriters tallied maritime risks' and Jonathan's coffee-house 'morphed into the London Stock Exchange' [75]. Furthermore, merchants protested the closure because 'trade depended on their information flows' [78]. This evidence strongly supports the conclusion that information exchange in coffeehouses was foundational for new economic institutions." },
+            { passageIndex: 1, text: "The passage suggests that the decline of the coffeehouse as a public forum was chiefly driven by:", options: ["an increase in coffee prices after 1760.", "the rise of alternative venues and media that re-segmented discourse.", "new temperance laws that equated coffeehouses with taverns.", "widespread fatigue with partisan newspapers left on tables."], correctAnswer: "B", explanation: "The passage attributes the decline to the fact that 'By the 1760s, private clubs and printed newspapers began to eclipse the open table, siphoning conversation into costlier venues or one-way columns' [81]. This describes a shift to alternative venues (private clubs) and media (newspapers), which re-segmented public discourse, directly matching option B." },
+            // Questions for Passage 3: Suez Canal
+            { passageIndex: 2, text: "According to the passage, which single development most immediately enabled Britain to obtain a decisive share of the Suez Canal Company?", options: ["Ratification of the Convention of Constantinople in 1888", "Termination of corvée labour in 1864", "Khedive Ismail's sale of Egyptian shares in 1875", "Completion of the canal's southern reach in 1869"], correctAnswer: "C", explanation: "The passage clearly states: 'In 1875 the cash-strapped Khedive Ismail sold Egypt's entire stake-176,602 shares-to the British treasury for just under four million pounds, giving London an effective veto' [132]. This directly identifies the sale of shares as the event that gave Britain its decisive holding." },
+            { passageIndex: 2, text: "What was the principal consequence of nationalisation announced on 26 July 1956, as described by the author?", options: ["A change in board control from French to Egyptian directors", "A temporary closure of the canal lasting roughly eight months", "Immediate withdrawal of British military forces from Egypt", "Enlargement of the canal's width to accommodate super-tankers"], correctAnswer: "B", explanation: "The passage states that 'Nationalisation by President Nasser on 26 July 1956 provoked the Suez Crisis, closing the waterway until April 1957' [133]. The period from late July 1956 to April 1957 is approximately eight to nine months, making option B the correct description of the immediate consequence." },
+            { passageIndex: 2, text: "Which pair of dates marks the longest continuous period during which the canal was not closed?", options: ["1859-1869", "1956-1957", "1967-1975", "1882-1888"], correctAnswer: "C", explanation: "This question likely contains a typographical error and intended to ask for the longest period the canal was *closed*. The passage mentions two closures: one provoked by the Suez Crisis from July 1956 to April 1957 (about 9 months) and a 'longer shutdown' during the Arab-Israeli wars from 1967 to 1975 (8 years) [133, 134]. Of the options provided, the period in C (1967-1975) represents the longest continuous closure mentioned in the text." },
+            { passageIndex: 2, text: "The passage implies that the 2015 expansion reduced average one-way transit time by approximately:", options: ["29 hours", "24 hours", "14 hours", "5 hours"], correctAnswer: "A", explanation: "The passage states that before the expansion, a passage took 'roughly forty hours' [131]. The 2015 expansion trimmed the 'average one-way transit to eleven hours' [135]. The reduction is the difference between these two times: 40 - 11 = 29 hours." },
+            // Questions for Passage 4: Byblos Tablets
+            { passageIndex: 3, text: "The tablets prove that all the cedar used in Ashurnasirpal II's palace came from Lebanon.", options: ["True", "False", "Can't Tell"], correctAnswer: "B", explanation: "The passage states that chemical analysis suggests 'at least part of the palace...was roofed with Lebanese cedar' [180]. This confirms some cedar was from Lebanon but does not provide enough information to prove that *all* of it was. The statement is an overstatement of the evidence provided. Thus, the statement is False as the tablets do not prove this, they only prove *part* of it." },
+            { passageIndex: 3, text: "Scholars had previously believed that Egyptian builders depended exclusively on Lebanese cedar for their projects.", options: ["True", "False", "Can't Tell"], correctAnswer: "A", explanation: "The passage states, 'While the cedar forests of Lebanon were long assumed to be the sole source of timber for Pharaonic Egypt...' [178]. 'Assumed' aligns with 'believed,' and 'sole source' aligns with 'depended exclusively.' This confirms the statement is True based on the passage." },
+            { passageIndex: 3, text: "Assyria's war with Urartu likely affected the kingdom's metal reserves.", options: ["True", "False", "Can't Tell"], correctAnswer: "A", explanation: "The passage notes a switch in payments from silver to barley on the tablets, and states 'That switch hints at a temporary bullion shortage following Assyria's costly campaign against Urartu' [181, 182]. A 'bullion shortage' is an effect on metal reserves (bullion is precious metal), and 'hints at' makes the connection probable, not certain. Therefore, the statement is True." },
+            { passageIndex: 3, text: "The appearance of Aramaic cursive on the tablets challenges current timelines of Near-Eastern linguistic development.", options: ["True", "False", "Can't Tell"], correctAnswer: "A", explanation: "The passage points out that the Aramaic script found was 'thirty years earlier than any surviving papyrus from the region' [183]. A find that predates the previously earliest known example by 30 years would inherently challenge and force a revision of existing timelines for the script's development. Thus, the statement is True." }
+        ];
+
+
+        // --- State ---
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(questions.length).fill(null);
+        let timerInterval;
+        let timeLeft = 10 * 60; // 10 minutes in seconds for 16 questions
+        let examStartTime;
+        let examEndTime;
+        let userName = '';
+        let userGoal = '';
+        let userFocusArea = '';
+        let isReviewingFromResults = false;
+        let questionStartTime = null;
+        let questionTimes = new Array(questions.length).fill(0);
+        let flaggedQuestions = new Array(questions.length).fill(false);
+        let isFilteringFlagged = false;
+        let currentlyDisplayedPassageIndex = -1;
+
+
+        // --- Elements ---
+        const appContainer = document.getElementById('app-container');
+        const setupScreen = document.getElementById('setup-screen');
+        const examScreen = document.getElementById('exam-screen');
+        const reviewScreen = document.getElementById('review-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const navigatorModal = document.getElementById('navigator-modal');
+        const startButton = document.getElementById('start-button');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const navigatorButton = document.getElementById('navigator-button');
+        const closeModalButton = document.getElementById('close-modal-button');
+        const endExamButton = document.getElementById('end-exam-button'); 
+        const endExamButtonFooter = document.getElementById('end-exam-button-footer'); 
+        const backToResultsButton = document.getElementById('back-to-results-button');
+        const flagButton = document.getElementById('flag-button');
+        const passageNumberEl = document.getElementById('passage-number');
+        const passageTextEl = document.getElementById('passage-text');
+        const questionNumberEl = document.getElementById('question-number');
+        const questionNumberInfoEl = document.getElementById('question-number-info');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const timerEl = document.getElementById('timer');
+        const reviewGrid = document.getElementById('review-grid');
+        const navigatorGrid = document.getElementById('navigator-grid');
+        const scoreEl = document.getElementById('score');
+        const totalQuestionsResultsEl = document.getElementById('total-questions-results');
+        const timeTakenEl = document.getElementById('time-taken');
+        const resultsGridContainer = document.getElementById('results-grid-container'); 
+        const nameInput = document.getElementById('name');
+        const goalInput = document.getElementById('goal');
+        const focusAreaInput = document.getElementById('focus-area');
+        const examTitleEl = document.getElementById('exam-title');
+        const filterFlaggedButton = document.getElementById('filter-flagged-button');
+        const setupQuestionCountEl = document.getElementById('setup-question-count');
+        const setupTimeLimitEl = document.getElementById('setup-time-limit');
+        const reviewExplanationContainer = document.getElementById('review-explanation-container');
+        const reflectionText = document.getElementById('reflection-text');
+        const downloadPdfButton = document.getElementById('download-pdf-button');
+        const focusRatingInput = document.getElementById('focus-rating');
+
+
+
+        // --- Functions ---
+
+        function startTimer() {
+            examStartTime = new Date();
+            clearInterval(timerInterval);
+            timerEl.textContent = formatTimeSeconds(timeLeft);
+            timerEl.classList.remove('text-gray-300'); 
+            timerEl.classList.add('text-white', 'bg-opacity-20', 'bg-white');
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = formatTimeSeconds(timeLeft);
+                if (timeLeft <= 0) {
+                    endExamAndShowResults();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            examEndTime = examEndTime || new Date(); 
+            timerEl.classList.remove('text-white', 'bg-opacity-20', 'bg-white');
+            timerEl.classList.add('text-gray-300'); 
+        }
+
+        function formatTimeSeconds(totalSeconds) {
+             if (totalSeconds < 0) totalSeconds = 0; 
+             const minutes = Math.floor(totalSeconds / 60);
+             const seconds = totalSeconds % 60;
+             return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        function formatTimeDifference(milliseconds) {
+            if (!milliseconds || milliseconds < 0) return "0 min 00 sec";
+            const totalSeconds = Math.round(milliseconds / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes} min ${seconds < 10 ? '0' : ''}${seconds} sec`;
+        }
+
+       
+        function recordTimeSpent(index) {
+            if (questionStartTime && index >= 0 && index < questions.length) {
+                const timeSpent = Date.now() - questionStartTime;
+                questionTimes[index] = (questionTimes[index] || 0) + timeSpent; 
+            }
+            questionStartTime = null; 
+        }
+
+       
+        function toggleFlag() {
+            if (isReviewingFromResults) return; 
+            const index = currentQuestionIndex;
+            flaggedQuestions[index] = !flaggedQuestions[index];
+            updateFlagButtonAppearance();
+            updateNavigatorButtons(); 
+        }
+
+       
+        function updateFlagButtonAppearance() {
+            const isFlagged = flaggedQuestions[currentQuestionIndex];
+            flagButton.textContent = isFlagged ? 'Unflag' : 'Flag for Review';
+            flagButton.classList.toggle('flagged', isFlagged);
+        }
+
+
+        function loadQuestion(index, reviewMode = false) {
+            if (index < 0 || index >= questions.length) return;
+
+            
+                
+                 if (!isReviewingFromResults && !reviewMode) { 
+                     recordTimeSpent(currentQuestionIndex);
+                 }
+
+            const question = questions[index];
+            const newPassageIndex = question.passageIndex;
+            const passageContainer = document.querySelector('.passage-column');
+            const questionContainer = document.querySelector('.question-column');
+
+           
+            if (newPassageIndex !== currentlyDisplayedPassageIndex || reviewMode) {
+                passageTextEl.innerHTML = passages[newPassageIndex].replace(/\n/g, '<br><br>');
+                passageNumberEl.textContent = newPassageIndex + 1;
+                currentlyDisplayedPassageIndex = newPassageIndex;
+                 if (passageContainer) passageContainer.scrollTop = 0; 
+            }
+
+            currentQuestionIndex = index;
+            isReviewingFromResults = reviewMode; 
+
+            questionNumberEl.textContent = index + 1;
+            questionNumberInfoEl.textContent = `${index + 1} of ${questions.length}`;
+            questionTextEl.textContent = question.text;
+             if (questionContainer) questionContainer.scrollTop = 0; 
+
+            optionsContainer.innerHTML = '';
+            reviewExplanationContainer.innerHTML = ''; 
+            const optionLetters = ['A', 'B', 'C', 'D', 'E']; 
+            question.options.forEach((option, i) => {
+                const optionId = `q${index}_opt${i}`;
+                const label = document.createElement('label');
+                label.htmlFor = optionId;
+                label.classList.add('option-label'); // Styles for this are in CSS, including text color and size
+                label.dataset.optionIndex = i; 
+
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.id = optionId;
+                radio.name = `question_${index}`;
+                radio.value = optionLetters[i]; 
+                radio.disabled = reviewMode; 
+
+                
+                label.classList.remove('border-green-500', 'border-red-500', 'border-2', 'bg-green-50', 'bg-red-50', 'selected-answer');
+                label.style.cursor = reviewMode ? 'default' : 'pointer';
+
+
+                if (userAnswers[index] === optionLetters[i]) {
+                    radio.checked = true;
+                    label.classList.add('selected-answer');
+                }
+
+               
+                if (reviewMode) {
+                    const isCorrectAnswer = question.correctAnswer === optionLetters[i];
+                    const isSelectedAnswer = userAnswers[index] === optionLetters[i];
+
+                    if (isCorrectAnswer) {
+                        label.classList.add('border-green-500', 'border-2'); 
+                        if (!isSelectedAnswer) label.classList.add('bg-green-50'); 
+                    } else if (isSelectedAnswer) { 
+                        label.classList.add('border-red-500', 'border-2', 'bg-red-50');
+                    }
+                }
+
+                label.appendChild(radio);
+                const textNode = document.createTextNode(` ${optionLetters[i]}) ${option}`);
+                label.appendChild(textNode);
+
+                if (!reviewMode) {
+                    label.addEventListener('click', (e) => {
+                         
+                        if (e.target.tagName !== 'INPUT') {
+                            handleOptionSelect(index, i, optionLetters[i]);
+                        }
+                    });
+                    radio.addEventListener('change', () => handleOptionSelect(index, i, optionLetters[i]));
+                }
+                optionsContainer.appendChild(label);
+            });
+
+           
+            if (reviewMode && question.explanation) {
+                const explanationDiv = document.createElement('div');
+                explanationDiv.classList.add('explanation-box'); 
+                explanationDiv.innerHTML = `<strong class="font-semibold">Explanation:</strong><br>${question.explanation.replace(/\n/g, '<br>')}`; 
+                reviewExplanationContainer.appendChild(explanationDiv);
+            }
+           
+
+
+            prevButton.disabled = index === 0;
+            if (!reviewMode && index === questions.length - 1) { 
+                nextButton.textContent = 'Finish & Review';
+                nextButton.disabled = false;
+            } else if (!reviewMode) { 
+                nextButton.textContent = 'Next (Alt+N) →';
+                nextButton.disabled = false;
+            } else { 
+                nextButton.disabled = index === questions.length - 1;
+                if (!nextButton.disabled) nextButton.textContent = 'Next →'; 
+            }
+
+            updateFlagButtonAppearance();
+
+           
+            if (reviewMode) {
+                backToResultsButton.classList.remove('hidden');
+                endExamButtonFooter.classList.add('hidden');
+                examTitleEl.textContent = "Reviewing Question";
+                prevButton.disabled = index === 0; 
+                navigatorButton.disabled = false; 
+                flagButton.disabled = true; 
+            } else { 
+                backToResultsButton.classList.add('hidden');
+                endExamButtonFooter.classList.remove('hidden');
+                examTitleEl.textContent = "Verbal Reasoning";
+                navigatorButton.disabled = false;
+                flagButton.disabled = false;
+                prevButton.disabled = index === 0;
+            }
+
+            updateNavigatorHighlight(); 
+
+           
+            if (!isReviewingFromResults) { 
+                questionStartTime = Date.now();
+            }
+        }
+
+        function handleOptionSelect(questionIndex, optionIndex, optionValue) {
+             
+             if (questionIndex !== currentQuestionIndex || isReviewingFromResults) return;
+             userAnswers[questionIndex] = optionValue;
+
+             
+             document.querySelectorAll(`#options-container .option-label`).forEach(lbl => {
+                 lbl.classList.remove('selected-answer');
+                 const radio = lbl.querySelector('input[type="radio"]');
+                 if(radio) radio.checked = false; 
+             });
+
+             const selectedLabel = document.querySelector(`#options-container label[for="q${questionIndex}_opt${optionIndex}"]`);
+              if (selectedLabel) {
+                 selectedLabel.classList.add('selected-answer');
+                 const radio = selectedLabel.querySelector('input[type="radio"]');
+                 if (radio) radio.checked = true; 
+              }
+             updateNavigatorButtons(); 
+        }
+
+
+        function showNextQuestion() {
+            if (isReviewingFromResults) { 
+                if (currentQuestionIndex < questions.length - 1) {
+                    loadQuestion(currentQuestionIndex + 1, true); 
+                }
+            }
+            else if (!isReviewingFromResults) { 
+                 recordTimeSpent(currentQuestionIndex); 
+                 if (currentQuestionIndex === questions.length - 1) { 
+                     stopTimer(); 
+                     showReviewScreen(); 
+                 } else if (currentQuestionIndex < questions.length - 1) {
+                     loadQuestion(currentQuestionIndex + 1); 
+                 }
+            }
+        }
+
+
+        function showPrevQuestion() {
+             if (isReviewingFromResults) { 
+                 if (currentQuestionIndex > 0) {
+                     loadQuestion(currentQuestionIndex - 1, true); 
+                 }
+             }
+            else if (currentQuestionIndex > 0 && !isReviewingFromResults) { 
+                 recordTimeSpent(currentQuestionIndex); 
+                 loadQuestion(currentQuestionIndex - 1);
+            }
+        }
+
+        function showSetupScreen() {
+            setupScreen.classList.remove('hidden');
+            examScreen.classList.add('hidden');
+            reviewScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            appContainer.classList.remove('flex', 'flex-col'); 
+            currentlyDisplayedPassageIndex = -1; 
+           
+            if (setupQuestionCountEl) setupQuestionCountEl.textContent = questions.length;
+            if (setupTimeLimitEl) setupTimeLimitEl.textContent = `${Math.floor(timeLeft / 60)} minutes`;
+
+        }
+
+        function showExamScreen() {
+            setupScreen.classList.add('hidden');
+            examScreen.classList.remove('hidden');
+            examScreen.classList.add('flex'); 
+            reviewScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            appContainer.classList.add('flex', 'flex-col'); 
+            currentlyDisplayedPassageIndex = -1; 
+        }
+
+
+        function showReviewScreen(filterFlagged = false) {
+            recordTimeSpent(currentQuestionIndex); 
+            stopTimer(); 
+
+            examScreen.classList.add('hidden');
+            reviewScreen.classList.remove('hidden');
+            reviewScreen.classList.add('flex');
+            resultsScreen.classList.add('hidden');
+            setupScreen.classList.add('hidden');
+            appContainer.classList.add('flex', 'flex-col');
+
+            reviewGrid.innerHTML = ''; 
+            questions.forEach((_, index) => {
+                 if (filterFlagged && !flaggedQuestions[index]) { 
+                     return;
+                 }
+
+                const button = document.createElement('button');
+                button.textContent = index + 1;
+                button.className = 'review-grid-button'; 
+
+                if (userAnswers[index] !== null && userAnswers[index] !== undefined) {
+                    button.classList.add('review-grid-button-answered');
+                } else {
+                     button.classList.add('review-grid-button-unanswered');
+                }
+
+                if (flaggedQuestions[index]) {
+                    button.classList.add('review-flagged'); 
+                }
+
+                button.onclick = () => {
+                    reviewScreen.classList.add('hidden'); 
+                    reviewScreen.classList.remove('flex');
+                    showExamScreen(); 
+                    loadQuestion(index); 
+                    startTimer(); 
+                };
+                reviewGrid.appendChild(button);
+            });
+
+             filterFlaggedButton.textContent = filterFlagged ? 'Show All Questions' : 'Show Flagged Only';
+        }
+
+        function populateNavigator() {
+             navigatorGrid.innerHTML = ''; 
+             questions.forEach((_, index) => {
+                 const button = document.createElement('button');
+                 button.textContent = index + 1;
+                
+                 button.classList.add('py-2', 'px-1', 'border', 'border-gray-300', 'rounded-md', 'text-center', 'transition', 'duration-150', 'ease-in-out', 'text-sm', 'hover:bg-gray-100');
+                 button.dataset.questionIndex = index; 
+
+                
+                 if (userAnswers[index]) button.classList.add('nav-answered');
+                 if (index === currentQuestionIndex) button.classList.add('nav-current');
+                 if (flaggedQuestions[index]) button.classList.add('nav-flagged');
+
+                 button.onclick = () => {
+                     navigatorModal.classList.remove('flex'); 
+                     navigatorModal.classList.add('hidden');
+                     const targetIndex = parseInt(button.dataset.questionIndex, 10);
+                    
+                     loadQuestion(targetIndex, isReviewingFromResults);
+                     if (!isReviewingFromResults) questionStartTime = Date.now(); 
+                 };
+                 navigatorGrid.appendChild(button);
+             });
+        }
+
+        function updateNavigatorButtons() {
+             if (!navigatorGrid) return;
+             const buttons = navigatorGrid.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const index = parseInt(button.dataset.questionIndex, 10);
+                 button.classList.remove('nav-answered', 'nav-current', 'nav-flagged'); 
+                 if (userAnswers[index]) button.classList.add('nav-answered');
+                 if (index === currentQuestionIndex) button.classList.add('nav-current');
+                 if (flaggedQuestions[index]) button.classList.add('nav-flagged');
+             });
+        }
+
+        function updateNavigatorHighlight() {
+             if (!navigatorGrid) return;
+             const buttons = navigatorGrid.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const index = parseInt(button.dataset.questionIndex, 10);
+                 button.classList.remove('nav-current');
+                 if (index === currentQuestionIndex) button.classList.add('nav-current');
+             });
+        }
+
+        function showResultsScreen() {
+            examEndTime = examEndTime || new Date(); 
+            recordTimeSpent(currentQuestionIndex); 
+            stopTimer(); 
+
+            examScreen.classList.add('hidden');
+            reviewScreen.classList.add('hidden');
+            reviewScreen.classList.remove('flex');
+            resultsScreen.classList.remove('hidden');
+            resultsScreen.classList.add('flex');
+            setupScreen.classList.add('hidden');
+            appContainer.classList.add('flex', 'flex-col');
+
+            let score = 0;
+            resultsGridContainer.innerHTML = ''; 
+
+            questions.forEach((qData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = qData.correctAnswer;
+                const isCorrect = userAnswer !== null && userAnswer !== undefined && userAnswer === correctAnswer;
+                if (isCorrect) score++;
+
+                const timeSpentMs = questionTimes[index] || 0; 
+                const timeSpentSec = Math.round(timeSpentMs / 1000);
+
+                const resultBox = document.createElement('div');
+                resultBox.classList.add('result-box');
+                resultBox.classList.add(isCorrect ? 'result-box-correct' : 'result-box-incorrect');
+                if (flaggedQuestions[index]) {
+                    resultBox.classList.add('result-box-flagged');
+                }
+                resultBox.dataset.index = index; 
+                resultBox.title = `Click to review Question ${index + 1}`;
+
+                const timeDiv = document.createElement('div');
+                timeDiv.classList.add('time-spent');
+                timeDiv.textContent = `${timeSpentSec}s`;
+                resultBox.appendChild(timeDiv);
+
+                const container = document.createElement('div');
+                container.style.display = 'flex';
+                container.style.flexDirection = 'column';
+                container.style.alignItems = 'center';
+                container.appendChild(resultBox);
+
+                const qNumDiv = document.createElement('div');
+                qNumDiv.classList.add('question-num-label');
+                qNumDiv.textContent = `Q${index + 1}`;
+                container.appendChild(qNumDiv);
+               
+                container.addEventListener('click', () => {
+                    revisitQuestionFromResults(index);
+                });
+                resultsGridContainer.appendChild(container);
+            });
+
+            scoreEl.textContent = score;
+            totalQuestionsResultsEl.textContent = questions.length;
+            const timeDiff = examEndTime - examStartTime;
+            timeTakenEl.textContent = formatTimeDifference(timeDiff);
+        }
+
+
+        function revisitQuestionFromResults(index) {
+            resultsScreen.classList.add('hidden');
+            resultsScreen.classList.remove('flex');
+            showExamScreen();
+            loadQuestion(index, true); 
+        }
+
+        function endExamAndShowResults() {
+            stopTimer(); 
+            showResultsScreen();
+        }
+        function handleEndExamFooterClick() {
+             recordTimeSpent(currentQuestionIndex); 
+             stopTimer();
+             showReviewScreen(); 
+        }
+
+       
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const reflection = reflectionText.value.trim();
+            const focusRating = focusRatingInput.value; 
+            const finalScore = scoreEl.textContent;
+            const totalQ = totalQuestionsResultsEl.textContent; 
+            const timeTaken = timeTakenEl.textContent;
+
+            let y = 15; 
+            const lineHeight = 7;
+            const pageHeight = doc.internal.pageSize.height;
+            const margin = 15;
+            const pageWidth = doc.internal.pageSize.width;
+
+
+           
+            doc.setFontSize(18);
+            doc.text("UCAT Verbal Reasoning Results", pageWidth / 2, y, { align: 'center' });
+            y += lineHeight * 2;
+
+           
+            doc.setFontSize(12);
+            const summaryData = [
+                ["Name:", userName || 'N/A'],
+                ["Goal:", `${userGoal || 'N/A'} / ${totalQ}`],
+                ["Focus Area:", userFocusArea || 'N/A'],
+                ["Final Score:", `${finalScore} / ${totalQ}`],
+                ["Time Taken:", timeTaken],
+                ["Focus Rating (1-5):", focusRating || 'N/A']
+            ];
+
+            summaryData.forEach(row => {
+                if (y > pageHeight - margin - lineHeight) { doc.addPage(); y = margin; }
+                doc.setFont(undefined, 'bold');
+                doc.text(row[0], margin, y);
+                doc.setFont(undefined, 'normal');
+                doc.text(row[1], margin + 40, y);
+                y += lineHeight;
+            });
+            y += lineHeight; 
+
+           
+            if (y > pageHeight - margin - (lineHeight*3)) { doc.addPage(); y = margin; } 
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text("Main Takeaway:", margin, y);
+            y += lineHeight;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            const reflectionLines = doc.splitTextToSize(reflection || 'No reflection provided.', pageWidth - margin * 2);
+            reflectionLines.forEach(line => {
+                if (y > pageHeight - margin - lineHeight) { doc.addPage(); y = margin; }
+                doc.text(line, margin, y);
+                y += (lineHeight * 0.8);
+            });
+            y += lineHeight; 
+
+           
+            if (y > pageHeight - margin - (lineHeight*2)) { doc.addPage(); y = margin; }
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text("Detailed Results:", margin, y);
+            y += lineHeight * 1.5;
+            doc.setFontSize(9); 
+            doc.setFont(undefined, 'normal');
+
+           
+            questions.forEach((qData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = qData.correctAnswer;
+                const isCorrect = userAnswer !== null && userAnswer !== undefined && userAnswer === correctAnswer;
+                const status = isCorrect ? "Correct" : (userAnswer ? "Incorrect" : "Not Answered");
+                const timeSpentSec = Math.round((questionTimes[index] || 0) / 1000);
+
+                const questionDetails = [
+                     `Q${index + 1}: ${qData.text.substring(0, 60)}...${flaggedQuestions[index] ? ' (Flagged)' : ''}`,
+                     `  Your Answer: ${userAnswer || 'N/A'}`,
+                     `  Correct Answer: ${correctAnswer}`,
+                     `  Status: ${status}`,
+                     `  Time: ${timeSpentSec}s`
+                ];
+
+               
+                const blockHeight = questionDetails.length * (lineHeight * 0.75) + (qData.explanation ? 3 * (lineHeight*0.75) : 0);
+                if (y + blockHeight > pageHeight - margin) {
+                    doc.addPage();
+                    y = margin; 
+                   
+                    doc.setFontSize(14); doc.setFont(undefined, 'bold');
+                    doc.text("Detailed Results (Continued):", margin, y);
+                    y += lineHeight * 1.5;
+                    doc.setFontSize(9); doc.setFont(undefined, 'normal');
+                }
+
+                questionDetails.forEach(detailLine => {
+                    doc.text(detailLine, margin, y);
+                    y += (lineHeight * 0.75);
+                });
+
+                if (qData.explanation) {
+                    const explLines = doc.splitTextToSize(`  Explanation: ${qData.explanation.replace(/\n/g, ' ')}`, pageWidth - (margin * 2.5)); 
+                    explLines.forEach(explLine => {
+                         if (y > pageHeight - margin - lineHeight) { doc.addPage(); y = margin; }
+                         doc.text(explLine, margin + 5, y); 
+                         y += (lineHeight * 0.75);
+                    });
+                }
+                y += (lineHeight * 0.5); 
+            });
+
+            doc.save(`ucat_vr_results_${userName.replace(/\s+/g, '_') || 'user'}.pdf`);
+        }
+
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', () => {
+            userName = nameInput.value.trim();
+            userGoal = goalInput.value.trim();
+            userFocusArea = focusAreaInput.value.trim();
+
+           
+            timeLeft = 10 * 60; 
+            userAnswers = new Array(questions.length).fill(null);
+            questionTimes = new Array(questions.length).fill(0);
+            flaggedQuestions = new Array(questions.length).fill(false);
+            questionStartTime = null;
+            currentQuestionIndex = 0;
+            isReviewingFromResults = false;
+            isFilteringFlagged = false; 
+            currentlyDisplayedPassageIndex = -1; 
+
+            showExamScreen();
+            startTimer(); 
+            loadQuestion(0);
+            populateNavigator(); 
+        });
+
+        nextButton.addEventListener('click', showNextQuestion);
+        prevButton.addEventListener('click', showPrevQuestion);
+        endExamButton.addEventListener('click', endExamAndShowResults); 
+        endExamButtonFooter.addEventListener('click', handleEndExamFooterClick); 
+        backToResultsButton.addEventListener('click', () => {
+            isReviewingFromResults = false; 
+            showResultsScreen(); 
+        });
+        navigatorButton.addEventListener('click', () => {
+             recordTimeSpent(currentQuestionIndex); 
+             updateNavigatorButtons(); 
+             navigatorModal.classList.remove('hidden');
+             navigatorModal.classList.add('flex');
+        });
+        closeModalButton.addEventListener('click', () => {
+             navigatorModal.classList.remove('flex');
+             navigatorModal.classList.add('hidden');
+             if (!isReviewingFromResults) questionStartTime = Date.now(); 
+        });
+       
+        navigatorModal.addEventListener('click', (event) => {
+            if (event.target === navigatorModal) closeModalButton.click();
+        });
+
+        flagButton.addEventListener('click', toggleFlag);
+
+        filterFlaggedButton.addEventListener('click', () => {
+            isFilteringFlagged = !isFilteringFlagged;
+            showReviewScreen(isFilteringFlagged); 
+        });
+
+       
+        downloadPdfButton.addEventListener('click', generatePDF);
+
+
+       
+        function handleKeyboardShortcuts(e) {
+             const isExamVisible = !examScreen.classList.contains('hidden');
+             const isModalVisible = navigatorModal.classList.contains('flex');
+            
+             const isInputFocused = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+
+             if (isModalVisible || isInputFocused) return; 
+             if (!isExamVisible) return; 
+
+             const key = e.key.toLowerCase();
+             const altOrOption = e.altKey; 
+             const code = e.code.toLowerCase(); 
+
+             if (altOrOption) {
+                 switch (code) { 
+                     case 'keyn': 
+                         e.preventDefault();
+                         if (!nextButton.disabled) nextButton.click();
+                         return;
+                     case 'keyp': 
+                         e.preventDefault();
+                         if (!prevButton.disabled) prevButton.click();
+                         return;
+                     case 'keyf': 
+                         e.preventDefault();
+                         if (!isReviewingFromResults && !flagButton.disabled) flagButton.click();
+                         return;
+                     default:
+                         return; 
+                 }
+             } else { 
+                
+                 if (['a', 'b', 'c', 'd'].includes(key) && !isReviewingFromResults) {
+                     e.preventDefault();
+                     const optionIndex = ['a', 'b', 'c', 'd'].indexOf(key);
+                     const optionValue = ['A', 'B', 'C', 'D'][optionIndex];
+                     const currentQuestionData = questions[currentQuestionIndex];
+                     if (optionIndex < currentQuestionData.options.length) { 
+                         handleOptionSelect(currentQuestionIndex, optionIndex, optionValue);
+                     }
+                     return;
+                 }
+             }
+        }
+
+        document.addEventListener('keydown', handleKeyboardShortcuts);
+
+
+        // --- Initial Load ---
+        showSetupScreen(); // Start with the setup screen
+
+    </script>
+</body>
+</html>
