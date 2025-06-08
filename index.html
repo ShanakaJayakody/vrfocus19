@@ -19,7 +19,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #ffffff; /* UPDATED: Body background to white */
+            background-color: #ffffff;
         }
         #app-container {
             display: flex;
@@ -205,22 +205,21 @@
 
         #results-grid-container { 
             display: grid;
-            grid-template-columns: repeat(8, 1fr); /* 8 columns */
-            grid-template-rows: repeat(2, 1fr); /* 2 rows */
-            gap: 0.75rem; /* Balanced spacing between boxes */
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.5rem; /* MODIFIED: Reduced gap */
             padding: 1rem 0; 
             overflow-y: auto; 
-            max-width: 100%; /* Use full width of container */
+            max-width: 80%; /* MODIFIED: Made container narrower */
             width: 100%;
-            margin: 0 auto; /* Center the grid */
+            margin: 0 auto;
         }
         .result-box {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            aspect-ratio: 1 / 1; /* Keep boxes square */
-            padding: 0.5rem; /* Padding for better content display */
+            aspect-ratio: 1 / 1;
+            padding: 0.25rem; /* MODIFIED: Reduced padding */
             border-radius: 0.375rem;
             color: white; 
             text-align: center;
@@ -230,7 +229,7 @@
             margin-bottom: 0.25rem;
             width: 100%;
             height: auto;
-            min-width: 3rem; /* Minimum width */
+            min-width: 2.5rem; /* MODIFIED: Reduced min-width */
         }
         .result-box:hover {
             transform: translateY(-2px);
@@ -249,12 +248,12 @@
             outline-offset: 2px;
         }
         .result-box .time-spent {
-            font-size: 1rem; /* Balanced font size */
+            font-size: 0.875rem; /* MODIFIED: Reduced font size */
             font-weight: 600; 
             line-height: 1.1;
         }
         .question-num-label {
-            font-size: 0.75rem; /* Balanced font size */
+            font-size: 0.75rem;
             color: #374151;
             text-align: center;
             width: 100%;
@@ -263,22 +262,19 @@
         /* Media queries for responsive grid */
         @media (max-width: 992px) {
             #results-grid-container {
-                grid-template-columns: repeat(8, 1fr);
-                max-width: 100%;
+                max-width: 90%; /* MODIFIED */
             }
         }
         @media (max-width: 768px) {
             #results-grid-container {
-                grid-template-columns: repeat(4, 1fr); /* 4 columns on medium screens */
-                grid-template-rows: repeat(4, 1fr); /* 4 rows on medium screens */
-                max-width: 100%;
+                grid-template-columns: repeat(4, 1fr);
+                max-width: 100%; /* MODIFIED */
                 gap: 0.5rem;
             }
         }
         @media (max-width: 480px) {
             #results-grid-container {
-                grid-template-columns: repeat(4, 1fr); /* Changed from 2 to 4 columns */
-                grid-template-rows: repeat(4, 1fr); /* Changed from 8 to 4 rows */
+                grid-template-columns: repeat(4, 1fr);
                 gap: 0.4rem;
             }
             .result-box .time-spent {
@@ -679,7 +675,7 @@
         
         function formatTimeMilliseconds(milliseconds) {
             if (!milliseconds || milliseconds < 0) return "0s";
-            const totalSeconds = Math.round(milliseconds / 1000);
+            const totalSeconds = (milliseconds / 1000).toFixed(1);
             return `${totalSeconds}s`;
         }
 
@@ -718,12 +714,11 @@
 
         function updateFontSize() {
             resizableTextElements.forEach(el => {
-                el.style.fontSize = `${currentFontSize}rem`;
+                // We target child elements inside the columns to avoid changing column padding/etc.
+                el.querySelectorAll('#passage-text, #question-text, .option-label').forEach(child => {
+                     child.style.fontSize = `${currentFontSize}rem`;
+                });
             });
-            // Adjust line-height based on font size for better readability
-            const lineHeight = currentFontSize * 1.6;
-            document.getElementById('passage-text').style.lineHeight = `${lineHeight}rem`;
-            document.getElementById('question-text').style.lineHeight = `${lineHeight * 0.9}rem`;
         }
 
 
@@ -844,7 +839,8 @@
                 prevButton.disabled = index === 0;
             }
 
-            updateNavigatorHighlight(); 
+            updateNavigatorHighlight();
+            updateFontSize(); // Apply font size on question load
            
             if (!isReviewingFromResults) { 
                 questionStartTime = Date.now();
@@ -1038,8 +1034,8 @@
             const avgCorrectTime = correctCount > 0 ? formatTimeMilliseconds(correctTimeTotal / correctCount) : 'N/A';
             const avgIncorrectTime = incorrectCount > 0 ? formatTimeMilliseconds(incorrectTimeTotal / incorrectCount) : 'N/A';
             timeAnalysisResultsEl.innerHTML = `
-                <p>Avg. time (Correct): <span class="font-bold">${avgCorrectTime}</span></p>
-                <p>Avg. time (Incorrect): <span class="font-bold">${avgIncorrectTime}</span></p>
+                <p>Avg. time (Correct): <span class="font-bold text-green-600">${avgCorrectTime}</span></p>
+                <p>Avg. time (Incorrect): <span class="font-bold text-red-600">${avgIncorrectTime}</span></p>
             `;
             
             // Display Type Analysis
@@ -1114,7 +1110,6 @@
             const timeDiff = examEndTime - examStartTime;
             timeTakenEl.textContent = formatTimeDifference(timeDiff);
 
-            // NEW: Call analytics function
             analyzeAndDisplayPerformance();
         }
 
